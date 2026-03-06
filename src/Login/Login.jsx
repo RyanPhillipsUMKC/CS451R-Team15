@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { FaGithub } from "react-icons/fa";
 
 export default function LoginPage({ onLoginSuccess }) {
   const [email, setEmail] = useState("");
@@ -22,15 +23,11 @@ export default function LoginPage({ onLoginSuccess }) {
     try {
       const user = await mockAuthenticate(email, password);
 
-      // Save session (remove later if backend handles sessions)
       if (rememberMe) {
-        // keep session going????
         //localStorage.setItem("user", JSON.stringify(user));
       }
 
-      // notify app login succeeded
       onLoginSuccess(user);
-
     } catch (err) {
       setError(err.message);
     }
@@ -40,6 +37,17 @@ export default function LoginPage({ onLoginSuccess }) {
 
   return (
     <div style={styles.page}>
+
+      {/* GitHub Icon */}
+      <a
+        href="https://github.com/RyanPhillipsUMKC/CS451R-Team15"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={styles.githubLink}
+      >
+        <FaGithub size={34} />
+      </a>
+
       <form onSubmit={handleSubmit} style={styles.card}>
         <h2>Sign In</h2>
         <p style={{ opacity: 0.7 }}>Mock login for development</p>
@@ -97,8 +105,7 @@ export default function LoginPage({ onLoginSuccess }) {
 function mockAuthenticate(email, password) {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
-      
-      // Example failure case
+
       if (password.length < 4) {
         reject(new Error("Password must be at least 4 characters."));
         return;
@@ -110,20 +117,33 @@ function mockAuthenticate(email, password) {
         email,
         token: "mock-jwt-token"
       });
-    }, 900); // simulate network delay
+
+    }, 900);
   });
 }
 
 const styles = {
-   page: {
+  page: {
     minHeight: "100vh",
     width: "100vw",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
     background: "#0f1115",
-    color: "white"
+    color: "white",
+    position: "relative"
   },
+
+  githubLink: {
+    position: "absolute",
+    top: 20,
+    right: 20,
+    color: "white",
+    opacity: 0.85,
+    transition: "0.2s",
+    cursor: "pointer"
+  },
+
   card: {
     width: 360,
     padding: 28,
@@ -134,12 +154,14 @@ const styles = {
     gap: 12,
     boxShadow: "0 10px 30px rgba(0,0,0,0.3)"
   },
+
   label: {
     display: "flex",
     flexDirection: "column",
     gap: 4,
     fontSize: 14
   },
+
   input: {
     padding: "10px 12px",
     borderRadius: 8,
@@ -147,12 +169,14 @@ const styles = {
     background: "#111",
     color: "white"
   },
+
   checkbox: {
     fontSize: 14,
     display: "flex",
     gap: 8,
     alignItems: "center"
   },
+
   button: {
     marginTop: 6,
     padding: "10px",
@@ -163,6 +187,7 @@ const styles = {
     fontWeight: 600,
     cursor: "pointer"
   },
+
   error: {
     background: "#ff4d4f22",
     padding: 8,
@@ -170,6 +195,7 @@ const styles = {
     color: "#ff6b6b",
     fontSize: 13
   },
+
   hint: {
     marginTop: 6,
     fontSize: 12,
