@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { FaGithub } from "react-icons/fa";
+import StarsCanvas from "./StarsCanvas";
 
 export default function LoginPage({ onLoginSuccess }) {
   const [email, setEmail] = useState("");
@@ -24,7 +25,7 @@ export default function LoginPage({ onLoginSuccess }) {
       const user = await mockAuthenticate(email, password);
 
       if (rememberMe) {
-        //localStorage.setItem("user", JSON.stringify(user));
+        // localStorage.setItem("user", JSON.stringify(user));
       }
 
       onLoginSuccess(user);
@@ -37,20 +38,24 @@ export default function LoginPage({ onLoginSuccess }) {
 
   return (
     <div style={styles.page}>
+      <StarsCanvas />
 
-      {/* GitHub Icon */}
+      {/* GitHub */}
       <a
         href="https://github.com/RyanPhillipsUMKC/CS451R-Team15"
         target="_blank"
         rel="noopener noreferrer"
-        style={styles.githubLink}
+        style={styles.github}
       >
-        <FaGithub size={34} />
+        <FaGithub size={28} />
       </a>
 
+      {/* Login Card */}
       <form onSubmit={handleSubmit} style={styles.card}>
-        <h2>Sign In</h2>
-        <p style={{ opacity: 0.7 }}>Mock login for development</p>
+        <div style={styles.header}>
+          <h1 style={styles.title}>Welcome Back</h1>
+          <p style={styles.subtitle}>Sign in to continue</p>
+        </div>
 
         <label style={styles.label}>
           Email
@@ -74,14 +79,16 @@ export default function LoginPage({ onLoginSuccess }) {
           />
         </label>
 
-        <label style={styles.checkbox}>
-          <input
-            type="checkbox"
-            checked={rememberMe}
-            onChange={() => setRememberMe(!rememberMe)}
-          />
-          Remember me
-        </label>
+        <div style={styles.options}>
+          <label style={styles.checkbox}>
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={() => setRememberMe(!rememberMe)}
+            />
+            Remember me
+          </label>
+        </div>
 
         {error && <div style={styles.error}>{error}</div>}
 
@@ -90,22 +97,16 @@ export default function LoginPage({ onLoginSuccess }) {
         </button>
 
         <div style={styles.hint}>
-          Use any email & password for now
+          Development login — use any email and password
         </div>
       </form>
     </div>
   );
 }
 
-/*
- MOCK AUTH FUNCTION
- Replace later with API call:
- await fetch('/api/login', {...})
-*/
 function mockAuthenticate(email, password) {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
-
       if (password.length < 4) {
         reject(new Error("Password must be at least 4 characters."));
         return;
@@ -115,9 +116,8 @@ function mockAuthenticate(email, password) {
         id: 1,
         name: "Demo User",
         email,
-        token: "mock-jwt-token"
+        token: "mock-jwt-token",
       });
-
     }, 900);
   });
 }
@@ -129,76 +129,106 @@ const styles = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    background: "#0f1115",
+    position: "relative",
     color: "white",
-    position: "relative"
+    fontFamily: "Inter, sans-serif",
   },
 
-  githubLink: {
+  github: {
     position: "absolute",
-    top: 20,
-    right: 20,
+    top: 25,
+    right: 25,
     color: "white",
-    opacity: 0.85,
-    transition: "0.2s",
-    cursor: "pointer"
+    opacity: 0.8,
+    transition: "0.3s",
   },
 
   card: {
-    width: 360,
-    padding: 28,
-    borderRadius: 12,
-    background: "#1a1d24",
+    width: 380,
+    padding: 36,
+    borderRadius: 16,
+    background: "rgba(20, 20, 25, 0.65)",
+    backdropFilter: "blur(12px)",
     display: "flex",
     flexDirection: "column",
-    gap: 12,
-    boxShadow: "0 10px 30px rgba(0,0,0,0.3)"
+    gap: 18,
+    boxShadow: "0 15px 40px rgba(0,0,0,0.45)",
+    border: "1px solid rgba(255,255,255,0.08)",
+    zIndex: 10,
+  },
+
+  header: {
+    textAlign: "center",
+    marginBottom: 10,
+  },
+
+  title: {
+    margin: 0,
+    fontSize: 28,
+    fontWeight: 600,
+  },
+
+  subtitle: {
+    margin: 0,
+    opacity: 0.6,
+    fontSize: 14,
   },
 
   label: {
     display: "flex",
     flexDirection: "column",
-    gap: 4,
-    fontSize: 14
+    fontSize: 14,
+    gap: 6,
   },
 
   input: {
-    padding: "10px 12px",
+    padding: "11px 14px",
     borderRadius: 8,
-    border: "1px solid #333",
-    background: "#111",
-    color: "white"
+    border: "1px solid #2c2c2c",
+    background: "#0e0e11",
+    color: "white",
+    fontSize: 14,
+    outline: "none",
+  },
+
+  options: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
 
   checkbox: {
-    fontSize: 14,
+    fontSize: 13,
     display: "flex",
     gap: 8,
-    alignItems: "center"
+    alignItems: "center",
   },
 
   button: {
-    marginTop: 6,
-    padding: "10px",
+    marginTop: 8,
+    padding: "12px",
     borderRadius: 8,
     border: "none",
-    background: "#3b82f6",
+    background: "linear-gradient(135deg,#3b82f6,#2563eb)",
     color: "white",
     fontWeight: 600,
-    cursor: "pointer"
+    fontSize: 15,
+    cursor: "pointer",
+    transition: "0.2s",
   },
 
   error: {
     background: "#ff4d4f22",
-    padding: 8,
+    padding: 10,
     borderRadius: 6,
     color: "#ff6b6b",
-    fontSize: 13
+    fontSize: 13,
   },
 
   hint: {
-    marginTop: 6,
     fontSize: 12,
-    opacity: 0.6
-  }
+    opacity: 0.5,
+    textAlign: "center",
+    marginTop: 6,
+  },
 };
