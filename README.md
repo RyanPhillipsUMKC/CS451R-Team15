@@ -38,4 +38,27 @@ The app also includes a **3D star background** for visual appeal using `react-th
 ### 1️⃣ Clone the repository
 ```bash
 git clone https://github.com/RyanPhillipsUMKC/CS451R-Team15.git 
+```
+
+### 2️⃣ Navigate into the project folder
+```bash
 cd CS451R-Team15
+```
+
+### 3️⃣ Install dependencies  
+```bash
+npm install
+```
+
+### 4️⃣ Run the development server  
+```bash
+npm run dev
+```
+
+### 5️⃣ Open the application  
+Open your browser and go to:  
+```bash
+http://localhost:5173
+```
+
+
