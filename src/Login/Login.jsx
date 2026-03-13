@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FaGithub } from "react-icons/fa";
+import { FaGithub, FaWallet, FaBitcoin } from "react-icons/fa";
 import StarsCanvas from "./StarsCanvas";
 
 export default function LoginPage({ onLoginSuccess }) {
@@ -54,7 +54,11 @@ export default function LoginPage({ onLoginSuccess }) {
       <form onSubmit={handleSubmit} style={styles.card}>
         <div style={styles.header}>
           <h1 style={styles.title}>Welcome Back</h1>
-          <p style={styles.subtitle}>Sign in to continue</p>
+          <p style={styles.subtitle}>Secure banking & crypto login</p>
+          <div style={styles.icons}>
+            <FaWallet size={22} color="#f5c518" />
+            <FaBitcoin size={22} color="#f7931a" style={{ marginLeft: 12 }} />
+          </div>
         </div>
 
         <label style={styles.label}>
@@ -88,6 +92,7 @@ export default function LoginPage({ onLoginSuccess }) {
             />
             Remember me
           </label>
+          <span style={styles.forgot}>Forgot password?</span>
         </div>
 
         {error && <div style={styles.error}>{error}</div>}
@@ -97,13 +102,15 @@ export default function LoginPage({ onLoginSuccess }) {
         </button>
 
         <div style={styles.hint}>
-          Development login — use any email and password
+          Use any email & password for development.  
+          Your mock account balance will be displayed after login.
         </div>
       </form>
     </div>
   );
 }
 
+// Mock authentication function with sample balance
 function mockAuthenticate(email, password) {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
@@ -117,6 +124,11 @@ function mockAuthenticate(email, password) {
         name: "Demo User",
         email,
         token: "mock-jwt-token",
+        balance: "$12,345.67",
+        crypto: {
+          BTC: "0.42",
+          ETH: "3.18",
+        },
       });
     }, 900);
   });
@@ -144,10 +156,10 @@ const styles = {
   },
 
   card: {
-    width: 380,
+    width: 400,
     padding: 36,
     borderRadius: 16,
-    background: "rgba(20, 20, 25, 0.65)",
+    background: "rgba(20, 20, 25, 0.75)",
     backdropFilter: "blur(12px)",
     display: "flex",
     flexDirection: "column",
@@ -172,6 +184,12 @@ const styles = {
     margin: 0,
     opacity: 0.6,
     fontSize: 14,
+  },
+
+  icons: {
+    display: "flex",
+    justifyContent: "center",
+    marginTop: 8,
   },
 
   label: {
@@ -204,6 +222,12 @@ const styles = {
     alignItems: "center",
   },
 
+  forgot: {
+    fontSize: 13,
+    color: "#3b82f6",
+    cursor: "pointer",
+  },
+
   button: {
     marginTop: 8,
     padding: "12px",
@@ -227,7 +251,7 @@ const styles = {
 
   hint: {
     fontSize: 12,
-    opacity: 0.5,
+    opacity: 0.6,
     textAlign: "center",
     marginTop: 6,
   },
