@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaGithub } from "react-icons/fa";
+import { FaGithub, FaWallet, FaBitcoin } from "react-icons/fa";
 import StarsCanvas from "./StarsCanvas";
 
 import { UserAuth } from "../authContext";
@@ -61,13 +61,18 @@ export default function LoginPage() {
       <form onSubmit={handleSubmit} style={styles.card}>
         <div style={styles.header}>
           <h1 style={styles.title}>Welcome Back</h1>
-          <p style={styles.subtitle}>Sign in to continue</p>
+          <p style={styles.subtitle}>Secure banking & crypto login</p>
+
+          <div style={styles.icons}>
+            <FaWallet size={22} color="#f5c518" />
+            <FaBitcoin size={22} color="#f7931a" style={{ marginLeft: 12 }} />
+          </div>
         </div>
 
         <label style={styles.label}>
           Email
           <input
-            type="email"
+            type=""
             placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -95,6 +100,8 @@ export default function LoginPage() {
             />
             Remember me
           </label>
+
+          <span style={styles.forgot}>Forgot password?</span>
         </div>
 
         {error && <div style={styles.error}>{error}</div>}
@@ -104,7 +111,8 @@ export default function LoginPage() {
         </button>
 
         <div style={styles.hint}>
-          Development login — use any email and password
+          Use any email & password for development.
+          Your mock account balance will be displayed after login.
         </div>
 
         <p style={{ marginTop: "12px", fontSize: "0.9rem", textAlign: "center" }}>
@@ -124,9 +132,12 @@ export default function LoginPage() {
   );
 }
 
+
+// Mock authentication function
 function mockAuthenticate(email, password) {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
+
       if (password.length < 4) {
         reject(new Error("Password must be at least 4 characters."));
         return;
@@ -136,11 +147,19 @@ function mockAuthenticate(email, password) {
         id: 1,
         name: "Demo User",
         email,
+        password, // ✅ added so profile page can display it
         token: "mock-jwt-token",
+        balance: "$12,345.67",
+        crypto: {
+          BTC: "0.42",
+          ETH: "3.18",
+        },
       });
+
     }, 900);
   });
 }
+
 
 const styles = {
   page: {
@@ -164,10 +183,10 @@ const styles = {
   },
 
   card: {
-    width: 380,
+    width: 400,
     padding: 36,
     borderRadius: 16,
-    background: "rgba(20, 20, 25, 0.65)",
+    background: "rgba(20, 20, 25, 0.75)",
     backdropFilter: "blur(12px)",
     display: "flex",
     flexDirection: "column",
@@ -192,6 +211,12 @@ const styles = {
     margin: 0,
     opacity: 0.6,
     fontSize: 14,
+  },
+
+  icons: {
+    display: "flex",
+    justifyContent: "center",
+    marginTop: 8,
   },
 
   label: {
@@ -224,6 +249,12 @@ const styles = {
     alignItems: "center",
   },
 
+  forgot: {
+    fontSize: 13,
+    color: "#3b82f6",
+    cursor: "pointer",
+  },
+
   button: {
     marginTop: 8,
     padding: "12px",
@@ -234,7 +265,6 @@ const styles = {
     fontWeight: 600,
     fontSize: 15,
     cursor: "pointer",
-    transition: "0.2s",
   },
 
   error: {
@@ -247,7 +277,7 @@ const styles = {
 
   hint: {
     fontSize: 12,
-    opacity: 0.5,
+    opacity: 0.6,
     textAlign: "center",
     marginTop: 6,
   },
