@@ -2,7 +2,7 @@
 import { Link } from "react-router-dom";
 import "./DashboardStyle.css"
 
-function Dashboard({user, onLogout}) {
+function Dashboard() {
   const holdings = [
     {
       ticker: "AAPL",
@@ -51,7 +51,7 @@ function Dashboard({user, onLogout}) {
         </div>
 
         <Link to="/profile" className="profile-button">
-          {user.name}
+          username
         </Link>
 
       </header>

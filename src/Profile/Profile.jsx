@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 
-export default function Profile({ user }) {
+export default function Profile() {
+  let user = {};
   return (
     <div style={styles.page}>
       <div style={styles.card}>

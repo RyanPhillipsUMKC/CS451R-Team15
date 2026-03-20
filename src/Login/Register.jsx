@@ -1,34 +1,47 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { FaGithub } from "react-icons/fa";
 import StarsCanvas from "./StarsCanvas";
 
 import { UserAuth } from "../authContext";
 
-export default function LoginPage() {
+export default function RegisterPage() {
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(true);
+  const [repeatPassword, setRepeatPassword] = useState("");
+  const [agreeToTos, setAgreeToTos] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const { signInUser } = UserAuth();
+  const { signUpNewUser } = UserAuth();
   const navigate = useNavigate();
-
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
 
-    if (!email || !password) {
-      setError("Please enter email and password.");
+    if (!fullName || !email || !password || !repeatPassword) {
+      setError("Please enter all fields below.");
+      return;
+    }
+
+    if (password !== repeatPassword)
+    {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    if (!agreeToTos)
+    {
+      setError("Must agree to the terms of service to create an account.");
       return;
     }
 
     setLoading(true);
    
     try {
-      const { session, error } = await signInUser(email, password);
+      const { session, error } = await signUpNewUser(email, password);
 
       if (!error) {
         navigate('/dashboard', { replace: true });
@@ -60,9 +73,19 @@ export default function LoginPage() {
       {/* Login Card */}
       <form onSubmit={handleSubmit} style={styles.card}>
         <div style={styles.header}>
-          <h1 style={styles.title}>Welcome Back</h1>
-          <p style={styles.subtitle}>Sign in to continue</p>
+          <h1 style={styles.title}>Create an Account</h1>
+          <p style={styles.subtitle}>Fill out all fields below.</p>
         </div>
+
+        <label style={styles.label}>
+          Full Name
+          <input
+            placeholder="John Doe"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            style={styles.input}
+          />
+        </label>
 
         <label style={styles.label}>
           Email
@@ -86,39 +109,49 @@ export default function LoginPage() {
           />
         </label>
 
+        <label style={styles.label}>
+          Repeat Password
+          <input
+            type="password"
+            placeholder="••••••••"
+            value={repeatPassword}
+            onChange={(e) => setRepeatPassword(e.target.value)}
+            style={styles.input}
+          />
+        </label>
+
         <div style={styles.options}>
           <label style={styles.checkbox}>
             <input
               type="checkbox"
-              checked={rememberMe}
-              onChange={() => setRememberMe(!rememberMe)}
+              checked={agreeToTos}
+              onChange={() => setAgreeToTos(!agreeToTos)}
             />
-            Remember me
+            I agree to terms of use.
           </label>
         </div>
 
         {error && <div style={styles.error}>{error}</div>}
 
         <button disabled={loading} style={styles.button}>
-          {loading ? "Signing in..." : "Login"}
+          {loading ? "Creating Account..." : "Create Account"}
         </button>
 
         <div style={styles.hint}>
-          Development login — use any email and password
+          Development registration — use any email and password
         </div>
 
         <p style={{ marginTop: "12px", fontSize: "0.9rem", textAlign: "center" }}>
-          Don't have an account?{" "}
+          Already have an account?{" "}
           <Link
-            to="/register"
+            to="/signin"
             style={{ color: "#4ea1ff", textDecoration: "none" }}
             onMouseEnter={(e) => (e.target.style.textDecoration = "underline")}
             onMouseLeave={(e) => (e.target.style.textDecoration = "none")}
           >
-            Sign up
+            Sign In
           </Link>
         </p>
-
       </form>
     </div>
   );
