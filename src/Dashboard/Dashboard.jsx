@@ -1,8 +1,16 @@
-
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import "./DashboardStyle.css"
+import "./DashboardStyle.css";
 
-function Dashboard({user, onLogout}) {
+function Dashboard({ user, onLogout }) {
+  // State for cash balance
+  const [cashBalance, setCashBalance] = useState(25000);
+
+  // Increment function
+  const incrementCash = () => {
+    setCashBalance((prev) => prev + 1);
+  };
+
   const holdings = [
     {
       ticker: "AAPL",
@@ -44,7 +52,6 @@ function Dashboard({user, onLogout}) {
   return (
     <div className="app">
       <header className="topbar">
-
         <div className="topbar-center">
           <span>Investment Tracking Plugin</span>
           <span className="dropdown-arrow">▾</span>
@@ -53,7 +60,6 @@ function Dashboard({user, onLogout}) {
         <Link to="/profile" className="profile-button">
           {user.name}
         </Link>
-
       </header>
 
       <section className="hero">
@@ -81,6 +87,7 @@ function Dashboard({user, onLogout}) {
 
       <main className="main-content">
         <section className="summary-grid">
+          {/* Cash Balance Card */}
           <div className="card stat-card">
             <div className="stat-header">
               <span className="stat-icon blue-text">
@@ -101,10 +108,13 @@ function Dashboard({user, onLogout}) {
               </span>
               <span>Cash Balance</span>
             </div>
-            <div className="stat-value">$25,000.00</div>
+            <div className="stat-value" onClick={incrementCash}>
+              ${cashBalance.toLocaleString()}
+            </div>
             <div className="stat-subtitle">Available liquid funds</div>
           </div>
 
+          {/* Total Account Balance Card */}
           <div className="card stat-card">
             <div className="stat-header">
               <span className="stat-icon green-text">
@@ -132,6 +142,7 @@ function Dashboard({user, onLogout}) {
           </div>
         </section>
 
+        {/* Portfolio Overview */}
         <section className="card portfolio-card">
           <div className="portfolio-top">
             <h2>Portfolio Overview</h2>

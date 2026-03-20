@@ -55,6 +55,7 @@ export default function LoginPage({ onLoginSuccess }) {
         <div style={styles.header}>
           <h1 style={styles.title}>Welcome Back</h1>
           <p style={styles.subtitle}>Secure banking & crypto login</p>
+
           <div style={styles.icons}>
             <FaWallet size={22} color="#f5c518" />
             <FaBitcoin size={22} color="#f7931a" style={{ marginLeft: 12 }} />
@@ -92,6 +93,7 @@ export default function LoginPage({ onLoginSuccess }) {
             />
             Remember me
           </label>
+
           <span style={styles.forgot}>Forgot password?</span>
         </div>
 
@@ -102,7 +104,7 @@ export default function LoginPage({ onLoginSuccess }) {
         </button>
 
         <div style={styles.hint}>
-          Use any email & password for development.  
+          Use any email & password for development.
           Your mock account balance will be displayed after login.
         </div>
       </form>
@@ -110,10 +112,12 @@ export default function LoginPage({ onLoginSuccess }) {
   );
 }
 
-// Mock authentication function with sample balance
+
+// Mock authentication function
 function mockAuthenticate(email, password) {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
+
       if (password.length < 4) {
         reject(new Error("Password must be at least 4 characters."));
         return;
@@ -123,6 +127,7 @@ function mockAuthenticate(email, password) {
         id: 1,
         name: "Demo User",
         email,
+        password, // ✅ added so profile page can display it
         token: "mock-jwt-token",
         balance: "$12,345.67",
         crypto: {
@@ -130,9 +135,11 @@ function mockAuthenticate(email, password) {
           ETH: "3.18",
         },
       });
+
     }, 900);
   });
 }
+
 
 const styles = {
   page: {
@@ -238,7 +245,6 @@ const styles = {
     fontWeight: 600,
     fontSize: 15,
     cursor: "pointer",
-    transition: "0.2s",
   },
 
   error: {

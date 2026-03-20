@@ -4,19 +4,17 @@ import LoginPage from "./Login/Login.jsx";
 import Dashboard from "./Dashboard/Dashboard.jsx";
 import Profile from "./Profile/Profile.jsx";
 
-
 export default function App() {
   const [user, setUser] = useState(null);
-  function logout() {
+
+  const logout = () => {
     setUser(null);
-  }
+  };
 
   if (!user) {
     return <LoginPage onLoginSuccess={setUser} />;
   }
-  
-  // TODO: for now just pass the mock user to the other pages
-  // eventually we will need supabase auth with some sort of session that we can just reference
+
   return (
     <Routes>
       <Route
@@ -26,7 +24,7 @@ export default function App() {
 
       <Route
         path="/profile"
-        element={<Profile user={user} />}
+        element={<Profile user={user} onLogout={logout} />}
       />
 
       <Route path="*" element={<Navigate to="/dashboard" />} />
