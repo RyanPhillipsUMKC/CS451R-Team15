@@ -57,9 +57,14 @@ function Dashboard({ user, onLogout }) {
           <span className="dropdown-arrow">▾</span>
         </div>
 
-        <Link to="/profile" className="profile-button">
-          username
-        </Link>
+        <div className="topbar-right">
+          <Link to="/stockcharts" className="email-button">
+            Charts
+          </Link>
+          <Link to="/profile" className="profile-button">
+            username
+          </Link>
+        </div>
       </header>
 
       <section className="hero">
