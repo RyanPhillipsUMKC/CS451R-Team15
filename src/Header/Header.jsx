@@ -80,6 +80,14 @@ function AppHeader() {
             >
               Charts
             </Link>
+
+            <Link
+              to="/portfolio"
+              className="nav-dropdown-link"
+              onClick={() => setNavMenuOpen(false)}
+            >
+              Portfolio Analysis
+            </Link>
           </div>
         </div>
       </div>

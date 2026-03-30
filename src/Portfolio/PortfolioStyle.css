@@ -1,0 +1,596 @@
+/* ─── Base (mirrors DashboardStyle.css globals) ─────────────────────────────── */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+  height: 100%;
+  width: 100%;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #0f1115;
+  color: #ffffff;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+.app {
+  min-height: 100vh;
+  width: 100%;
+  background: #0f1115;
+  color: #ffffff;
+}
+
+/* ─── Topbar ─────────────────────────────────────────────────────────────────── */
+
+.topbar {
+  width: 100%;
+  min-height: 58px;
+  background: #11141a;
+  color: #ffffff;
+  border-bottom: 1px solid #333;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+}
+
+.topbar-center {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.dropdown-arrow {
+  color: #9ca3af;
+}
+
+/* ─── Topbar Nav ─────────────────────────────────────────────────────────────── */
+
+.topbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.nav-link {
+  padding: 7px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #9ca3af;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.nav-link:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.nav-link-active {
+  background: rgba(59, 130, 246, 0.12);
+  color: #3b82f6;
+}
+
+.nav-link-active:hover {
+  background: rgba(59, 130, 246, 0.18);
+  color: #3b82f6;
+}
+
+.profile-button {
+  padding: 7px 14px;
+  border-radius: 10px;
+  border: 1px solid #333;
+  background: #1a1d24;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.profile-button:hover {
+  background: #22252f;
+}
+
+/* ─── Hero ───────────────────────────────────────────────────────────────────── */
+
+.hero {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 30px 3vw 26px;
+  background: #0f1115;
+  border-bottom: 1px solid #333;
+}
+
+.hero-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: rgba(59, 130, 246, 0.14);
+  color: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.15;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.hero p {
+  margin: 8px 0 0;
+  font-size: 15px;
+  color: #9ca3af;
+}
+
+/* ─── Layout ─────────────────────────────────────────────────────────────────── */
+
+.main-content {
+  width: 100%;
+  padding: 40px 3vw 48px;
+  background: #0f1115;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  width: 100%;
+}
+
+.card {
+  width: 100%;
+  background: #1a1d24;
+  border: 1px solid #333;
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* ─── Stat Cards ─────────────────────────────────────────────────────────────── */
+
+.stat-card {
+  padding: 34px 32px;
+}
+
+.stat-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #9ca3af;
+  font-size: 17px;
+}
+
+.stat-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-value {
+  margin-top: 20px;
+  font-size: 42px;
+  line-height: 1.1;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.stat-subtitle {
+  margin-top: 10px;
+  font-size: 15px;
+  color: #9ca3af;
+}
+
+.invested-text {
+  margin-left: 14px;
+  font-weight: 600;
+}
+
+/* ─── Shared Divider ─────────────────────────────────────────────────────────── */
+
+.portfolio-divider {
+  border-top: 1px solid #333;
+}
+
+/* ─── TradingView Chart Card ─────────────────────────────────────────────────── */
+
+.chart-card {
+  overflow: hidden;
+}
+
+.chart-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 28px 32px 24px;
+  flex-wrap: wrap;
+}
+
+.chart-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.chart-subtitle {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+.chart-selector {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chart-selector-btn {
+  padding: 7px 16px;
+  border-radius: 10px;
+  border: 1px solid #333;
+  background: #11141a;
+  color: #9ca3af;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.chart-selector-btn:hover {
+  background: #1e2128;
+  color: #ffffff;
+}
+
+/* Active states tinted by holding color */
+.chart-selector-btn-active.dot-blue   { border-color: #3b82f6; color: #3b82f6; background: rgba(59,130,246,0.1); }
+.chart-selector-btn-active.dot-green  { border-color: #22c55e; color: #22c55e; background: rgba(34,197,94,0.1);  }
+.chart-selector-btn-active.dot-orange { border-color: #f59e0b; color: #f59e0b; background: rgba(245,158,11,0.1); }
+.chart-selector-btn-active.dot-red    { border-color: #ff6b6b; color: #ff6b6b; background: rgba(255,107,107,0.1); }
+.chart-selector-btn-active.dot-purple { border-color: #8b5cf6; color: #8b5cf6; background: rgba(139,92,246,0.1); }
+
+.tradingview-wrapper {
+  height: 520px;
+  width: 100%;
+  border-top: 1px solid #333;
+}
+
+/* ─── Analysis Card ──────────────────────────────────────────────────────────── */
+
+.analysis-card {
+  overflow: hidden;
+}
+
+.analysis-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 28px 32px 22px;
+  flex-wrap: wrap;
+}
+
+.analysis-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.analyze-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 12px;
+  background: #3b82f6;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.15s, opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.analyze-btn:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.analyze-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Context chips row */
+.analysis-context {
+  display: flex;
+  gap: 10px;
+  padding: 0 32px 22px;
+  flex-wrap: wrap;
+}
+
+.context-chip {
+  padding: 5px 12px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #11141a;
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+/* Error banner */
+.analysis-error {
+  margin: 0 32px 16px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ff6b6b;
+  font-size: 14px;
+}
+
+/* ─── Recommendations List ───────────────────────────────────────────────────── */
+
+.recommendations-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.recommendation-item {
+  padding: 24px 32px;
+  border-top: 1px solid #333;
+  transition: background 0.12s;
+}
+
+.recommendation-item:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.rec-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.rec-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.rec-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  min-width: 160px;
+}
+
+/* Holding dots (reused from Dashboard) */
+.holding-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.holding-ticker {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.holding-name {
+  font-size: 15px;
+  font-weight: 400;
+  color: #9ca3af;
+}
+
+/* ─── Action Badge ───────────────────────────────────────────────────────────── */
+
+.action-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.action-badge.buy {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  color: #22c55e;
+}
+
+.action-badge.hold {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #f59e0b;
+}
+
+.action-badge.sell {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #ff6b6b;
+}
+
+/* ─── Confidence Bar ─────────────────────────────────────────────────────────── */
+
+.confidence-wrap {
+  width: 160px;
+}
+
+.confidence-label {
+  font-size: 12px;
+  color: #9ca3af;
+  display: block;
+  margin-bottom: 5px;
+  text-align: right;
+}
+
+.confidence-bar {
+  width: 100%;
+  height: 6px;
+  background: #333;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.confidence-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.cf-buy  { background: #22c55e; }
+.cf-hold { background: #f59e0b; }
+.cf-sell { background: #ff6b6b; }
+
+/* ─── Reasoning Text ─────────────────────────────────────────────────────────── */
+
+.rec-reasoning {
+  margin: 14px 0 0 30px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: #9ca3af;
+}
+
+/* ─── Dot color classes (shared with Dashboard) ─────────────────────────────── */
+
+.dot-blue   { background: #3b82f6; }
+.dot-green  { background: #22c55e; }
+.dot-orange { background: #f59e0b; }
+.dot-red    { background: #ff6b6b; }
+.dot-purple { background: #8b5cf6; }
+
+/* ─── Utility text colors ────────────────────────────────────────────────────── */
+
+.blue-text   { color: #3b82f6; }
+.green-text  { color: #22c55e; }
+.orange-text { color: #f59e0b; }
+.red-text    { color: #ff6b6b; }
+.purple-text { color: #8b5cf6; }
+
+/* ─── Responsive ─────────────────────────────────────────────────────────────── */
+
+@media (max-width: 1100px) {
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .topbar {
+    height: auto;
+    padding: 12px;
+    gap: 12px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .topbar-center,
+  .topbar-nav {
+    justify-content: center;
+  }
+
+  .profile-button {
+    text-align: center;
+  }
+
+  .hero,
+  .main-content {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .chart-header,
+  .analysis-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .rec-right {
+    align-items: flex-start;
+    min-width: unset;
+  }
+
+  .confidence-wrap {
+    width: 140px;
+  }
+}
+
+@media (max-width: 600px) {
+  .stat-value {
+    font-size: 32px;
+  }
+
+  .tradingview-wrapper {
+    height: 380px;
+  }
+
+  .rec-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .recommendation-item {
+    padding: 20px 20px;
+  }
+
+  .rec-reasoning {
+    margin-left: 0;
+  }
+
+  .analysis-context {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .chart-header,
+  .analysis-header {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}

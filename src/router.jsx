@@ -7,6 +7,7 @@ import Dashboard from "./Dashboard/Dashboard";
 import Profile from "./Profile/Profile";
 import PrivateRoute from "./PrivateRoute/PrivateRoute";
 import StockCharts from "./StockCharts/StockCharts";
+import Portfolio from "./Portfolio/Portfolio";
 
 export const router = createBrowserRouter([
   { path: "/", element: <App /> },
@@ -35,6 +36,14 @@ export const router = createBrowserRouter([
     element: (
       <PrivateRoute>
         <StockCharts />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: "/portfolio",
+    element: (
+      <PrivateRoute>
+        <Portfolio />
       </PrivateRoute>
     ),
   },

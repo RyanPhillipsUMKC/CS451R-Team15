@@ -89,6 +89,55 @@ button {
   color: #9ca3af;
 }
 
+/* Nav links (shared between Dashboard and Portfolio) */
+
+.topbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.nav-link {
+  padding: 7px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #9ca3af;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.nav-link:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.nav-link-active {
+  background: rgba(59, 130, 246, 0.12);
+  color: #3b82f6;
+}
+
+.nav-link-active:hover {
+  background: rgba(59, 130, 246, 0.18);
+  color: #3b82f6;
+}
+
+.profile-button {
+  padding: 7px 14px;
+  border-radius: 10px;
+  border: 1px solid #333;
+  background: #1a1d24;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.profile-button:hover {
+  background: #22252f;
+}
+
 .icon-button {
   width: 36px;
   height: 36px;
