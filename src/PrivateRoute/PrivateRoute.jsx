@@ -1,9 +1,7 @@
 import { UserAuth } from "../authContext";
 import { Navigate } from "react-router-dom";
 
-
-
-let IS_DEVELOPMENT = true;
+let IS_DEVELOPMENT = false;
 
 // wrap other components that require the user to be signed in
 // if not signed in -> send to landing page

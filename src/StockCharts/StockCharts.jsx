@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import "../Dashboard/DashboardStyle.css";
+import AppHeader from "../Header/Header";
 
 /* Hard Coded Charts until API is implemented */
 function StockCharts() {
@@ -13,13 +14,7 @@ function StockCharts() {
   return (
     <div className="app">
       {/* Top bar */}
-      <header className="topbar">
-        <div className="topbar-center">
-          <span>Stock Charts</span>
-        </div>
-
-        <Link to="/dashboard">Back</Link>
-      </header>
+      <AppHeader />
 
       {/* Hero */}
       <section className="hero">

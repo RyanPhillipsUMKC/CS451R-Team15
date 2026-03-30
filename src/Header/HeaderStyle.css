@@ -1,0 +1,175 @@
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  overflow: visible;
+  padding: 18px 28px;
+  background: rgba(12, 18, 30, 0.88);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  z-index: 100;
+}
+
+.topbar-left,
+.topbar-right {
+  display: flex;
+  align-items: center;
+  overflow: visible;
+}
+
+.nav-menu-anchor,
+.profile-menu-anchor {
+  position: relative;
+  display: inline-block;
+  overflow: visible;
+}
+
+.topbar-title-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  color: white;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 8px 10px;
+  border-radius: 10px;
+  transition: background 0.15s ease;
+}
+
+.topbar-title-button:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.dropdown-arrow {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.nav-dropdown,
+.profile-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 190px;
+  background: #1a1d24;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+  z-index: 9999;
+
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-6px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.nav-dropdown {
+  left: 0;
+  right: auto;
+}
+
+.nav-dropdown.open,
+.profile-dropdown.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.nav-dropdown-link,
+.profile-dropdown-link,
+.profile-dropdown-logout {
+  width: 100%;
+  display: block;
+  padding: 12px 14px;
+  text-align: left;
+  text-decoration: none;
+  color: white;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+}
+
+.nav-dropdown-link:hover,
+.profile-dropdown-link:hover,
+.profile-dropdown-logout:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.nav-dropdown-link:first-child,
+.profile-dropdown-link:first-child {
+  border-radius: 12px 12px 0 0;
+}
+
+.nav-dropdown-link:last-child {
+  border-radius: 0 0 12px 12px;
+}
+
+.profile-dropdown-logout:last-child {
+  border-radius: 0 0 12px 12px;
+  color: #ff8b8b;
+}
+
+.profile-icon-button {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  color: white;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+/* Combined profile button */
+.profile-button-combined {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.profile-button-combined:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Username text */
+.profile-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #e5ecf5;
+  max-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Smaller arrow for profile */
+.dropdown-arrow.small {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}

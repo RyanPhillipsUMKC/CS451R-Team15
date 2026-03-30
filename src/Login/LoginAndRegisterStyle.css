@@ -1,0 +1,190 @@
+.auth-page {
+  min-height: 100vh;
+  width: 100%;
+  background: #0f1115;
+  color: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  padding: 24px;
+}
+
+.auth-github {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid #333;
+  background: #1a1d24;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 34px 32px;
+  border-radius: 24px;
+  background: #1a1d24;
+  border: 1px solid #333;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+.auth-kicker {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #11141a;
+  font-size: 12px;
+  font-weight: 600;
+  color: #d1d5db;
+  margin-bottom: 14px;
+}
+
+.auth-title {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.15;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.auth-subtitle {
+  margin: 10px 0 0;
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+.auth-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  color: #ffffff;
+}
+
+.auth-input {
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: 1px solid #333;
+  background: #111;
+  color: #ffffff;
+  font-size: 14px;
+  outline: none;
+}
+
+.auth-input::placeholder {
+  color: #6b7280;
+}
+
+.auth-input:focus {
+  border-color: #3b82f6;
+}
+
+.auth-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.auth-checkbox {
+  font-size: 13px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: #d1d5db;
+}
+
+.auth-inline-link {
+  font-size: 13px;
+  color: #3b82f6;
+  cursor: pointer;
+}
+
+.auth-error {
+  background: rgba(255, 107, 107, 0.12);
+  border: 1px solid rgba(255, 107, 107, 0.22);
+  padding: 10px 12px;
+  border-radius: 12px;
+  color: #ff6b6b;
+  font-size: 13px;
+}
+
+.auth-button {
+  margin-top: 4px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 12px;
+  background: #3b82f6;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.auth-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.auth-hint {
+  font-size: 12px;
+  color: #9ca3af;
+  text-align: center;
+  margin-top: 4px;
+}
+
+.auth-footer-text {
+  margin: 4px 0 0;
+  font-size: 14px;
+  text-align: center;
+  color: #d1d5db;
+}
+
+.auth-text-link {
+  color: #3b82f6;
+  text-decoration: none;
+}
+
+.auth-text-link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 600px) {
+  .auth-page {
+    padding: 16px;
+  }
+
+  .auth-github {
+    top: 16px;
+    right: 16px;
+  }
+
+  .auth-card {
+    padding: 26px 22px;
+    border-radius: 20px;
+  }
+
+  .auth-title {
+    font-size: 24px;
+  }
+}

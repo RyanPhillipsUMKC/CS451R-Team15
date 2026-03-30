@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import AppHeader from "../Header/Header";
 import "./DashboardStyle.css";
 
 function Dashboard({ user, onLogout }) {
@@ -51,22 +52,7 @@ function Dashboard({ user, onLogout }) {
 
   return (
     <div className="app">
-      <header className="topbar">
-        <div className="topbar-center">
-          <span>Investment Tracking Plugin</span>
-          <span className="dropdown-arrow">▾</span>
-        </div>
-
-        <div className="topbar-right">
-          <Link to="/stockcharts" className="email-button">
-            Charts
-          </Link>
-          <Link to="/profile" className="profile-button">
-            username
-          </Link>
-        </div>
-      </header>
-
+      <AppHeader />
       <section className="hero">
         <div className="hero-icon">
           <svg

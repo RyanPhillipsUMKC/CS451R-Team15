@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FaGithub } from "react-icons/fa";
-import StarsCanvas from "./StarsCanvas";
-
 import { UserAuth } from "../authContext";
+import "./LoginAndRegisterStyle.css";
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState("");
@@ -26,129 +25,122 @@ export default function RegisterPage() {
       return;
     }
 
-    if (password !== repeatPassword)
-    {
+    if (password !== repeatPassword) {
       setError("Passwords do not match.");
       return;
     }
 
-    if (!agreeToTos)
-    {
+    if (!agreeToTos) {
       setError("Must agree to the terms of service to create an account.");
       return;
     }
 
     setLoading(true);
-   
+
     try {
-      const { session, error } = await signUpNewUser(email, password);
+      const { error } = await signUpNewUser(email, password);
 
       if (!error) {
-        navigate('/dashboard', { replace: true });
+        navigate("/dashboard", { replace: true });
       } else {
         setError(error);
       }
-
     } catch (error) {
-      setError(error);
+      setError(error?.message || "An unexpected error occurred.");
     }
 
     setLoading(false);
   }
 
   return (
-    <div style={styles.page}>
-      <StarsCanvas />
-
-      {/* GitHub */}
+    <div className="auth-page">
       <a
         href="https://github.com/RyanPhillipsUMKC/CS451R-Team15"
         target="_blank"
         rel="noopener noreferrer"
-        style={styles.github}
+        className="auth-github"
+        aria-label="GitHub repository"
       >
-        <FaGithub size={28} />
+        <FaGithub size={24} />
       </a>
 
-      {/* Login Card */}
-      <form onSubmit={handleSubmit} style={styles.card}>
-        <div style={styles.header}>
-          <h1 style={styles.title}>Create an Account</h1>
-          <p style={styles.subtitle}>Fill out all fields below.</p>
+      <form onSubmit={handleSubmit} className="auth-card">
+        <div className="auth-header">
+          <div className="auth-kicker">Register</div>
+          <h1 className="auth-title">Create an Account</h1>
+          <p className="auth-subtitle">
+            Fill out the fields below to create your account.
+          </p>
         </div>
 
-        <label style={styles.label}>
+        <label className="auth-label">
           Full Name
           <input
+            type="text"
             placeholder="John Doe"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            style={styles.input}
+            className="auth-input"
           />
         </label>
 
-        <label style={styles.label}>
+        <label className="auth-label">
           Email
           <input
-            type="email"
+            type="text"
             placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            style={styles.input}
+            className="auth-input"
           />
         </label>
 
-        <label style={styles.label}>
+        <label className="auth-label">
           Password
           <input
             type="password"
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            style={styles.input}
+            className="auth-input"
           />
         </label>
 
-        <label style={styles.label}>
+        <label className="auth-label">
           Repeat Password
           <input
             type="password"
             placeholder="••••••••"
             value={repeatPassword}
             onChange={(e) => setRepeatPassword(e.target.value)}
-            style={styles.input}
+            className="auth-input"
           />
         </label>
 
-        <div style={styles.options}>
-          <label style={styles.checkbox}>
+        <div className="auth-options">
+          <label className="auth-checkbox">
             <input
               type="checkbox"
               checked={agreeToTos}
               onChange={() => setAgreeToTos(!agreeToTos)}
             />
-            I agree to terms of use.
+            I agree to the terms of use
           </label>
         </div>
 
-        {error && <div style={styles.error}>{error}</div>}
+        {error && <div className="auth-error">{error}</div>}
 
-        <button disabled={loading} style={styles.button}>
+        <button disabled={loading} className="auth-button">
           {loading ? "Creating Account..." : "Create Account"}
         </button>
 
-        <div style={styles.hint}>
-          Development registration — use any email and password
+        <div className="auth-hint">
+          Create your account to access the dashboard and portfolio tools.
         </div>
 
-        <p style={{ marginTop: "12px", fontSize: "0.9rem", textAlign: "center" }}>
+        <p className="auth-footer-text">
           Already have an account?{" "}
-          <Link
-            to="/signin"
-            style={{ color: "#4ea1ff", textDecoration: "none" }}
-            onMouseEnter={(e) => (e.target.style.textDecoration = "underline")}
-            onMouseLeave={(e) => (e.target.style.textDecoration = "none")}
-          >
+          <Link to="/signin" className="auth-text-link">
             Sign In
           </Link>
         </p>
@@ -156,132 +148,3 @@ export default function RegisterPage() {
     </div>
   );
 }
-
-function mockAuthenticate(email, password) {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (password.length < 4) {
-        reject(new Error("Password must be at least 4 characters."));
-        return;
-      }
-
-      resolve({
-        id: 1,
-        name: "Demo User",
-        email,
-        token: "mock-jwt-token",
-      });
-    }, 900);
-  });
-}
-
-const styles = {
-  page: {
-    minHeight: "100vh",
-    width: "100vw",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    position: "relative",
-    color: "white",
-    fontFamily: "Inter, sans-serif",
-  },
-
-  github: {
-    position: "absolute",
-    top: 25,
-    right: 25,
-    color: "white",
-    opacity: 0.8,
-    transition: "0.3s",
-  },
-
-  card: {
-    width: 380,
-    padding: 36,
-    borderRadius: 16,
-    background: "rgba(20, 20, 25, 0.65)",
-    backdropFilter: "blur(12px)",
-    display: "flex",
-    flexDirection: "column",
-    gap: 18,
-    boxShadow: "0 15px 40px rgba(0,0,0,0.45)",
-    border: "1px solid rgba(255,255,255,0.08)",
-    zIndex: 10,
-  },
-
-  header: {
-    textAlign: "center",
-    marginBottom: 10,
-  },
-
-  title: {
-    margin: 0,
-    fontSize: 28,
-    fontWeight: 600,
-  },
-
-  subtitle: {
-    margin: 0,
-    opacity: 0.6,
-    fontSize: 14,
-  },
-
-  label: {
-    display: "flex",
-    flexDirection: "column",
-    fontSize: 14,
-    gap: 6,
-  },
-
-  input: {
-    padding: "11px 14px",
-    borderRadius: 8,
-    border: "1px solid #2c2c2c",
-    background: "#0e0e11",
-    color: "white",
-    fontSize: 14,
-    outline: "none",
-  },
-
-  options: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-
-  checkbox: {
-    fontSize: 13,
-    display: "flex",
-    gap: 8,
-    alignItems: "center",
-  },
-
-  button: {
-    marginTop: 8,
-    padding: "12px",
-    borderRadius: 8,
-    border: "none",
-    background: "linear-gradient(135deg,#3b82f6,#2563eb)",
-    color: "white",
-    fontWeight: 600,
-    fontSize: 15,
-    cursor: "pointer",
-    transition: "0.2s",
-  },
-
-  error: {
-    background: "#ff4d4f22",
-    padding: 10,
-    borderRadius: 6,
-    color: "#ff6b6b",
-    fontSize: 13,
-  },
-
-  hint: {
-    fontSize: 12,
-    opacity: 0.5,
-    textAlign: "center",
-    marginTop: 6,
-  },
-};
