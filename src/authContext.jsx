@@ -5,6 +5,7 @@ const AuthContext = createContext();
 
 export const AuthContextProvider = ({ children }) => {
   const [session, setSession] = useState(undefined);
+  const [isRecoverySession, setIsRecoverySession] = useState(false);
 
   // Sign up
   const signUpNewUser = async (email, password) => {
@@ -52,10 +53,23 @@ export const AuthContextProvider = ({ children }) => {
       setSession(session);
     });
 
-    supabase.auth.onAuthStateChange((_event, session) => {
+    supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
+
+      console.log(event);
+
+      if (event === "PASSWORD_RECOVERY") {
+        setIsRecoverySession(true);
+      }
+      if (event === "SIGNED_OUT") {
+        setIsRecoverySession(false);
+      }
     });
   }, []);
+
+  const clearRecoverySession = () => {
+    setIsRecoverySession(false);
+  };
 
   // Sign out
   async function signOut() {
@@ -65,9 +79,80 @@ export const AuthContextProvider = ({ children }) => {
     }
   }
 
+  const resetPassword = async (email) => {
+    try {
+      // TODO: When we deploy to some hosting cite this needs to change to accomodate
+      // TODO: maybe make this env varibale???
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: "http://localhost:5173/updatepassword",
+      });
+
+      await supabase.auth.verifyOtp
+
+      if (error) {
+        console.error("Reset password error:", error.message);
+        return { success: false, error };
+      }
+
+      return { success: true, data };
+    } catch (error) {
+      console.error("Unexpected reset password error:", error);
+      return { success: false, error };
+    }
+  };
+
+  const updatePassword = async (newPassword, otp) => {
+    try {
+      const { data, error } = await supabase.auth.updateUser({
+        password: newPassword,
+        nonce: otp
+      });
+
+      if (error) {
+        console.error("Update password error:", error.message);
+        return { success: false, error };
+      }
+
+      return { success: true, data };
+    } catch (error) {
+      console.error("Unexpected update password error:", error);
+      return { success: false, error };
+    }
+  };
+
+  const verifyRecoveryOtp = async (email, token) => {
+    try {  
+      const { data, error } = await supabase.auth.verifyOtp({
+        email,
+        token,
+        type: "recovery",
+      });
+
+      if (error) {
+        console.error("Verify recovery OTP error:", error.message);
+        return { success: false, error };
+      }
+
+      return { success: true, data };
+    } catch (error) {
+      console.error("Unexpected verify recovery OTP error:", error);
+      return { success: false, error };
+    }
+  };
+
   return (
     <AuthContext.Provider
-      value={{ signUpNewUser, signInUser, session, signOut }} >
+      value={{
+        signInUser,
+        signUpNewUser,
+        signOut,
+        resetPassword,
+        updatePassword,
+        isRecoverySession,
+        clearRecoverySession,
+        verifyRecoveryOtp,
+        session,
+      }} >
       {children}
     </AuthContext.Provider>
   );

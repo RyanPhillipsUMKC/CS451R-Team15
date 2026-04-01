@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, Navigate } from "react-router-dom";
 import { FaGithub } from "react-icons/fa";
 import { UserAuth } from "../authContext";
 import "./LoginAndRegisterStyle.css";
@@ -38,6 +38,12 @@ export default function LoginPage() {
     }
 
     setLoading(false);
+  }
+
+  const { session } = UserAuth();
+
+  if (session) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return (
@@ -93,7 +99,9 @@ export default function LoginPage() {
             Remember me
           </label>
 
-          <span className="auth-inline-link">Forgot password?</span>
+          <Link to="/forgotpassword" className="auth-inline-link">
+            Forgot password?
+          </Link>
         </div>
 
         {error && <div className="auth-error">{error}</div>}
