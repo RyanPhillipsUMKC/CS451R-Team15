@@ -17,40 +17,40 @@ export default function RegisterPage() {
   const navigate = useNavigate();
 
   async function handleSubmit(e) {
-    e.preventDefault();
-    setError("");
+  e.preventDefault();
+  setError("");
 
-    if (!fullName || !email || !password || !repeatPassword) {
-      setError("Please enter all fields below.");
-      return;
+  if (!fullName || !email || !password || !repeatPassword) {
+    setError("Please enter all fields below.");
+    return;
+  }
+
+  if (password !== repeatPassword) {
+    setError("Passwords do not match.");
+    return;
+  }
+
+  if (!agreeToTos) {
+    setError("Must agree to the terms of service to create an account.");
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    const result = await signUpNewUser(email, password);
+
+    if (result?.error) {
+      setError(result.error.message || "Failed to create account.");
+    } else {
+      navigate("/dashboard", { replace: true });
     }
-
-    if (password !== repeatPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-
-    if (!agreeToTos) {
-      setError("Must agree to the terms of service to create an account.");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const { error } = await signUpNewUser(email, password);
-
-      if (!error) {
-        navigate("/dashboard", { replace: true });
-      } else {
-        setError(error);
-      }
-    } catch (error) {
-      setError(error?.message || "An unexpected error occurred.");
-    }
-
+  } catch (err) {
+    setError(err.message || "An unexpected error occurred.");
+  } finally {
     setLoading(false);
   }
+}
 
   return (
     <div className="auth-page">
