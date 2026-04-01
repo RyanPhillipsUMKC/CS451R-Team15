@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import AppHeader from "../Header/Header";
 import "./PortfolioStyle.css";
 
 // ─── Mock Data ─────────────────────────────────────────────────────────────────
@@ -189,25 +190,7 @@ function Portfolio({ user }) {
   return (
     <div className="app">
       {/* ── Topbar ── */}
-      <header className="topbar">
-        <nav className="topbar-nav">
-          <Link to="/dashboard" className="nav-link">
-            Dashboard
-          </Link>
-          <Link to="/portfolio" className="nav-link nav-link-active">
-            Portfolio Analysis
-          </Link>
-        </nav>
-
-        <div className="topbar-center">
-          <span>Investment Tracking Plugin</span>
-          <span className="dropdown-arrow">▾</span>
-        </div>
-
-        <Link to="/profile" className="profile-button">
-          {user.name}
-        </Link>
-      </header>
+      <AppHeader />
 
       {/* ── Hero ── */}
       <section className="hero">
