@@ -5,12 +5,14 @@ const AuthContext = createContext();
 
 export const AuthContextProvider = ({ children }) => {
   const [session, setSession] = useState(undefined);
+  const [userEmail, setUserEmail] = useState(""); // ✅ store email
+  const [userPassword, setUserPassword] = useState(""); // ✅ store password (only for demo)
 
   // Sign up
   const signUpNewUser = async (email, password) => {
     const { data, error } = await supabase.auth.signUp({
       email: email.toLowerCase(),
-      password: password,
+      password,
     });
 
     if (error) {
@@ -26,19 +28,20 @@ export const AuthContextProvider = ({ children }) => {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.toLowerCase(),
-        password: password,
+        password,
       });
 
-      // Handle Supabase error explicitly
       if (error) {
-        console.error("Sign-in error:", error.message); // Log the error for debugging
-        return { success: false, error: error.message }; // Return the error
+        console.error("Sign-in error:", error.message);
+        return { success: false, error: error.message };
       }
 
-      // If no error, return success
-      return { success: true, data }; // Return the user data
+      // ✅ store email & password for demo purposes
+      setUserEmail(email);
+      setUserPassword(password);
+
+      return { success: true, data };
     } catch (error) {
-      // Handle unexpected issues
       console.error("Unexpected error during sign-in:", error.message);
       return {
         success: false,
@@ -57,22 +60,29 @@ export const AuthContextProvider = ({ children }) => {
     });
   }, []);
 
-  // Sign out
   async function signOut() {
     const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error("Error signing out:", error);
-    }
+    if (error) console.error("Error signing out:", error);
+
+    // ✅ clear email/password
+    setUserEmail("");
+    setUserPassword("");
   }
 
   return (
     <AuthContext.Provider
-      value={{ signUpNewUser, signInUser, session, signOut }} >
+      value={{
+        signUpNewUser,
+        signInUser,
+        session,
+        signOut,
+        userEmail,
+        userPassword, // ✅ expose password for demo
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const UserAuth = () => {
-  return useContext(AuthContext);
-};
+export const UserAuth = () => useContext(AuthContext);
