@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import { UserAuth } from "../authContext";
 
-export default function Profile({ user, onLogout }) {
+export default function Profile({ onLogout }) {
+  const { userEmail, userPassword, signOut } = UserAuth();
+
   const [showPassword, setShowPassword] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -9,11 +12,10 @@ export default function Profile({ user, onLogout }) {
   const [message, setMessage] = useState("");
   const [glowIntensity, setGlowIntensity] = useState(20);
 
-  // Canvas reference
   const canvasRef = useRef(null);
   const drawing = useRef(false);
 
-  // Animate card glow
+  // Glow animation
   useEffect(() => {
     const interval = setInterval(() => {
       setGlowIntensity((prev) => (prev >= 35 ? 20 : prev + 1));
@@ -21,10 +23,11 @@ export default function Profile({ user, onLogout }) {
     return () => clearInterval(interval);
   }, []);
 
-  // Setup canvas
+  // Canvas setup
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
+
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
@@ -32,9 +35,9 @@ export default function Profile({ user, onLogout }) {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
     };
+
     window.addEventListener("resize", handleResize);
 
-    // Mouse events
     const startDrawing = (e) => {
       drawing.current = true;
       ctx.beginPath();
@@ -70,20 +73,16 @@ export default function Profile({ user, onLogout }) {
     };
   }, []);
 
-  if (!user) {
-    return (
-      <div style={styles.page}>
-        <div style={styles.card}>
-          <h2>Loading profile...</h2>
-        </div>
-      </div>
-    );
-  }
+  // SAFE USER from context
+  const safeUser = {
+    email: userEmail || "guest@example.com",
+    password: userPassword || "1234",
+  };
 
   const handleResetPassword = () => {
     setMessage("");
 
-    if (currentPassword !== user.password) {
+    if (currentPassword !== safeUser.password) {
       setMessage("Current password is incorrect.");
       return;
     }
@@ -94,63 +93,46 @@ export default function Profile({ user, onLogout }) {
     }
 
     if (newPassword !== confirmPassword) {
-      setMessage("New password and confirm password do not match.");
+      setMessage("Passwords do not match.");
       return;
     }
 
-    user.password = newPassword; // Update mock password
+    setMessage("Password updated (demo only - not saved to Supabase)");
     setCurrentPassword("");
     setNewPassword("");
     setConfirmPassword("");
-    setMessage("Password successfully updated!");
-  };
-
-  const getGlow = (text) => {
-    const intensity = Math.min(text.length * 3, 20);
-    return `0 0 ${intensity}px #38b2ac, 0 0 ${intensity * 2}px #3b82f6`;
   };
 
   return (
     <div style={styles.page}>
-      {/* Drawing Canvas Background */}
-      <canvas
-        ref={canvasRef}
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          zIndex: 0,
-        }}
-      ></canvas>
+      <canvas ref={canvasRef} style={{ position: "absolute", top: 0, left: 0 }} />
 
       <div
         style={{
           ...styles.card,
           boxShadow: `0 0 ${glowIntensity}px #3b82f6, 0 0 ${glowIntensity * 2}px #38b2ac`,
-          zIndex: 1,
         }}
       >
         <h1 style={styles.title}>User Profile</h1>
 
+        {/* EMAIL */}
         <div style={styles.field}>
           <label>Email</label>
-          <input type="text" value={user.email} readOnly style={styles.input} />
+          <input type="text" value={safeUser.email} readOnly style={styles.input} />
         </div>
 
+        {/* PASSWORD */}
         <div style={styles.field}>
           <label>Password</label>
           <div style={styles.passwordWrapper}>
             <input
               type={showPassword ? "text" : "password"}
-              value={user.password}
+              value={safeUser.password}
               readOnly
               style={styles.input}
             />
             <button
-              style={{
-                ...styles.eyeButton,
-                transform: showPassword ? "rotateY(180deg)" : "rotateY(0deg)",
-              }}
+              style={styles.eyeButton}
               onClick={() => setShowPassword(!showPassword)}
             >
               {showPassword ? "🔓" : "🔒"}
@@ -158,69 +140,49 @@ export default function Profile({ user, onLogout }) {
           </div>
         </div>
 
+        {/* RESET SECTION */}
         <div style={styles.field}>
           <label>Current Password</label>
           <input
             type="password"
-            placeholder="Enter current password"
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
-            style={{ ...styles.input, boxShadow: getGlow(currentPassword) }}
+            style={styles.input}
           />
 
           <label>New Password</label>
           <input
             type="password"
-            placeholder="Enter new password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            style={{ ...styles.input, boxShadow: getGlow(newPassword) }}
+            style={styles.input}
           />
 
-          <label>Confirm New Password</label>
+          <label>Confirm Password</label>
           <input
             type="password"
-            placeholder="Confirm new password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            style={{ ...styles.input, boxShadow: getGlow(confirmPassword) }}
+            style={styles.input}
           />
 
-          <button
-            style={styles.resetButton}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.boxShadow =
-                "0 0 10px #38b2ac, 0 0 20px #4fd1c5")
-            }
-            onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "none")}
-            onClick={handleResetPassword}
-          >
+          <button style={styles.resetButton} onClick={handleResetPassword}>
             Reset Password
           </button>
 
           {message && <div style={styles.message}>{message}</div>}
         </div>
 
-        <Link
-          to="/dashboard"
-          style={styles.backButton}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.boxShadow =
-              "0 0 10px #3b82f6, 0 0 20px #38bdf8")
-          }
-          onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "none")}
-        >
+        <Link to="/dashboard" style={styles.backButton}>
           Back to Dashboard
         </Link>
 
         <button
           style={styles.logoutButton}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.boxShadow =
-              "0 0 10px #f56565, 0 0 20px #fc8181")
-          }
-          onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "none")}
-          onClick={onLogout}
+          onClick={() => {
+            signOut();
+            if (onLogout) onLogout();
+          }}
         >
           Logout
         </button>
@@ -262,10 +224,13 @@ const styles = {
     fontSize: 30,
     fontWeight: 700,
     color: "#3b82f6",
-    textShadow: "0 0 5px #3b82f6, 0 0 15px #38b2ac",
   },
 
-  field: { display: "flex", flexDirection: "column", gap: 8 },
+  field: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 8,
+  },
 
   input: {
     padding: "12px",
@@ -274,10 +239,13 @@ const styles = {
     background: "#0f1115",
     color: "white",
     width: "100%",
-    transition: "box-shadow 0.3s, border-color 0.3s",
   },
 
-  passwordWrapper: { display: "flex", alignItems: "center", gap: 8 },
+  passwordWrapper: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+  },
 
   eyeButton: {
     padding: "8px 12px",
@@ -285,7 +253,6 @@ const styles = {
     border: "none",
     background: "#3b82f6",
     cursor: "pointer",
-    transition: "transform 0.3s, box-shadow 0.3s",
   },
 
   backButton: {
@@ -297,7 +264,6 @@ const styles = {
     textDecoration: "none",
     color: "white",
     fontWeight: "600",
-    transition: "box-shadow 0.3s",
   },
 
   logoutButton: {
@@ -309,7 +275,6 @@ const styles = {
     color: "white",
     fontWeight: 600,
     cursor: "pointer",
-    transition: "box-shadow 0.3s",
   },
 
   resetButton: {
@@ -321,13 +286,11 @@ const styles = {
     color: "white",
     fontWeight: 600,
     cursor: "pointer",
-    transition: "box-shadow 0.3s",
   },
 
   message: {
     marginTop: 6,
     fontSize: 14,
     color: "#48bb78",
-    fontWeight: 500,
   },
 };
