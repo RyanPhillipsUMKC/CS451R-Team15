@@ -10,6 +10,7 @@ import Portfolio from "./Portfolio/Portfolio";
 import ForgotPasswordPage from "./PasswordRecovery/ForgotPassword";
 import UpdatePasswordPage from "./PasswordRecovery/UpdatePassword";
 import RecoveryRoute from "./PasswordRecovery/RecoveryRoute";
+import TransactPage from "./Transact/Transact";
 
 export const router = createBrowserRouter([
   { path: "/", element: <App /> },
@@ -61,6 +62,14 @@ export const router = createBrowserRouter([
     element: (
       <PrivateRoute>
         <Portfolio />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: "/transact",
+    element: (
+      <PrivateRoute>
+        <TransactPage />
       </PrivateRoute>
     ),
   },

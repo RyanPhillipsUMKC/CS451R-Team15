@@ -1,58 +1,197 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { UserAuth } from "../authContext";
 import AppHeader from "../Header/Header";
 import "./DashboardStyle.css";
 
-function Dashboard({ user, onLogout }) {
-  // State for cash balance
-  const [cashBalance, setCashBalance] = useState(25000);
+function Dashboard() {
+  const [startingFunds, setStartingFunds] = useState(0);
+  const [cashBalance, setCashBalance] = useState(0);
+  const [realHoldings, setRealHoldings] = useState({});
+  const [loading, setLoading] = useState(true);
 
-  // Increment function
-  const incrementCash = () => {
-    setCashBalance((prev) => prev + 1);
-  };
-  
-  const holdings = [
-    {
-      ticker: "AAPL",
-      name: "Apple Inc.",
-      value: "$8,926.00",
-      change: "+8.00%",
+  const { user, getUserFinancialSummary } = UserAuth();
+
+  const metadata = user?.user_metadata;
+
+  const mockMarketData = {
+    AAPL: {
+      currentPrice: 182.5,
       dotClass: "dot-blue",
     },
-    {
-      ticker: "GOOGL",
-      name: "Alphabet Inc.",
-      value: "$4,285.50",
-      change: "+5.20%",
+    GOOGL: {
+      currentPrice: 178.25,
       dotClass: "dot-green",
     },
-    {
-      ticker: "MSFT",
-      name: "Microsoft Corp.",
-      value: "$10,154.00",
-      change: "+3.90%",
+    MSFT: {
+      currentPrice: 441.5,
       dotClass: "dot-orange",
     },
-    {
-      ticker: "TSLA",
-      name: "Tesla Inc.",
-      value: "$6,840.00",
-      change: "-1.40%",
+    TSLA: {
+      currentPrice: 251.75,
       dotClass: "dot-red",
     },
-    {
-      ticker: "NVDA",
-      name: "NVIDIA Corp.",
-      value: "$7,403.50",
-      change: "+6.10%",
+    NVDA: {
+      currentPrice: 948.0,
       dotClass: "dot-purple",
     },
-  ];
+  };
+
+  const dotClassToColor = {
+    "dot-blue": "#3b82f6",
+    "dot-green": "#22c55e",
+    "dot-orange": "#f59e0b",
+    "dot-red": "#ff6b6b",
+    "dot-purple": "#8b5cf6",
+  };
+
+  const dotClassToTextClass = {
+    "dot-blue": "blue-text",
+    "dot-green": "green-text",
+    "dot-orange": "orange-text",
+    "dot-red": "red-text",
+    "dot-purple": "purple-text",
+  };
+
+  useEffect(() => {
+    async function loadDashboardData() {
+      setLoading(true);
+
+      const summaryResult = await getUserFinancialSummary();
+
+      if (summaryResult.success) {
+        const summary = summaryResult.data;
+        setStartingFunds(Number(summary.startingFunds ?? 0));
+        setCashBalance(Number(summary.cashBalance ?? 0));
+        setRealHoldings(summary.holdings ?? {});
+      } else {
+        console.error(summaryResult.error);
+        setStartingFunds(0);
+        setCashBalance(0);
+        setRealHoldings({});
+      }
+
+      setLoading(false);
+    }
+
+    loadDashboardData();
+  }, [getUserFinancialSummary]);
+
+  const holdings = useMemo(() => {
+    const holdingsArray = Object.values(realHoldings ?? {});
+
+    return holdingsArray.map((holding) => {
+      const market = mockMarketData[holding.ticker] ?? {
+        currentPrice: 100,
+        dotClass: "dot-blue",
+      };
+
+      const shares = Number(holding.shares || 0);
+      const averageCost = Number(holding.averageCost || 0);
+      const totalCost = Number(holding.totalCost || 0);
+
+      const currentValue = shares * market.currentPrice;
+      const gainLoss = currentValue - totalCost;
+
+      const percentChange =
+        totalCost > 0 ? (gainLoss / totalCost) * 100 : 0;
+
+      return {
+        ticker: holding.ticker,
+        name: holding.company_name,
+        shares,
+        averageCost,
+        totalCost,
+        valueNumber: currentValue,
+        value: `$${currentValue.toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`,
+        change: `${percentChange >= 0 ? "+" : ""}${percentChange.toFixed(2)}%`,
+        dotClass: market.dotClass,
+      };
+    });
+  }, [realHoldings]);
+
+  const totalPortfolioValue = useMemo(() => {
+    return holdings.reduce((sum, holding) => sum + holding.valueNumber, 0);
+  }, [holdings]);
+
+  const totalAccountBalance = cashBalance + totalPortfolioValue;
+
+  const investedPercent =
+    totalAccountBalance > 0
+      ? (totalPortfolioValue / totalAccountBalance) * 100
+      : 0;
+
+  const totalProfitLoss = totalAccountBalance - startingFunds;
+
+  const profitPercent =
+    startingFunds > 0
+      ? (totalProfitLoss / startingFunds) * 100
+      : 0;
+
+  const allocationData = useMemo(() => {
+    if (totalPortfolioValue <= 0) return [];
+
+    return holdings
+      .filter((holding) => holding.valueNumber > 0)
+      .map((holding) => ({
+        ticker: holding.ticker,
+        percent: (holding.valueNumber / totalPortfolioValue) * 100,
+        dotClass: holding.dotClass,
+      }));
+  }, [holdings, totalPortfolioValue]);
+
+  const pieChartBackground = useMemo(() => {
+    if (allocationData.length === 0) {
+      return "#22252f";
+    }
+
+    let currentDegree = 0;
+
+    const segments = allocationData.map((item) => {
+      const color = dotClassToColor[item.dotClass] || "#3b82f6";
+      const start = currentDegree;
+      const end = currentDegree + (item.percent / 100) * 360;
+      currentDegree = end;
+      return `${color} ${start}deg ${end}deg`;
+    });
+
+    return `conic-gradient(${segments.join(", ")})`;
+  }, [allocationData]);
+
+
+  const pieLabels = useMemo(() => {
+    if (allocationData.length === 0) return [];
+
+    let currentDegree = 0;
+
+    return allocationData.map((item) => {
+      const sliceAngle = (item.percent / 100) * 360;
+
+      const midAngle = currentDegree + sliceAngle / 2;
+      currentDegree += sliceAngle;
+
+      // convert to radians
+      const rad = (midAngle - 90) * (Math.PI / 180);
+
+      const radius = 90; // distance from center (tweak this)
+
+      const x = Math.cos(rad) * radius;
+      const y = Math.sin(rad) * radius;
+
+      return {
+        ...item,
+        x,
+        y,
+      };
+    });
+  }, [allocationData]);
 
   return (
     <div className="app">
       <AppHeader />
+
       <section className="hero">
         <div className="hero-icon">
           <svg
@@ -74,11 +213,14 @@ function Dashboard({ user, onLogout }) {
           <h1>Investment Tracker</h1>
           <p>Real-time portfolio monitoring &amp; AI analysis</p>
         </div>
+
+        <div className="hero-welcome">
+          Welcome, {metadata?.first_name} {metadata?.last_name}
+        </div>
       </section>
 
       <main className="main-content">
         <section className="summary-grid">
-          {/* Cash Balance Card */}
           <div className="card stat-card">
             <div className="stat-header">
               <span className="stat-icon blue-text">
@@ -99,13 +241,16 @@ function Dashboard({ user, onLogout }) {
               </span>
               <span>Cash Balance</span>
             </div>
-            <div className="stat-value" onClick={incrementCash}>
-              ${cashBalance.toLocaleString()}
+            <div className="stat-value">
+              $
+              {cashBalance.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
             </div>
             <div className="stat-subtitle">Available liquid funds</div>
           </div>
 
-          {/* Total Account Balance Card */}
           <div className="card stat-card">
             <div className="stat-header">
               <span className="stat-icon green-text">
@@ -125,15 +270,26 @@ function Dashboard({ user, onLogout }) {
               </span>
               <span>Total Account Balance</span>
             </div>
-            <div className="stat-value">$62,609.00</div>
+            <div className="stat-value">
+              $
+              {totalAccountBalance.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </div>
             <div className="stat-subtitle">
-              Investments: $37,609.00{" "}
-              <span className="green-text invested-text">60.1% invested</span>
+              Investments: $
+              {totalPortfolioValue.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}{" "}
+              <span className="green-text invested-text">
+                {investedPercent.toFixed(1)}% invested
+              </span>
             </div>
           </div>
         </section>
 
-        {/* Portfolio Overview */}
         <section className="card portfolio-card">
           <div className="portfolio-top">
             <h2>Portfolio Overview</h2>
@@ -141,12 +297,34 @@ function Dashboard({ user, onLogout }) {
             <div className="portfolio-stats">
               <div>
                 <div className="portfolio-label">Total Portfolio Value</div>
-                <div className="portfolio-value">$37,609.00</div>
+                <div className="portfolio-value">
+                  $
+                  {totalPortfolioValue.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </div>
               </div>
 
               <div>
                 <div className="portfolio-label">Total Profit/Loss</div>
-                <div className="portfolio-value green-text">+$844.50</div>
+                <div
+                  className={
+                    totalProfitLoss >= 0
+                      ? "portfolio-value green-text"
+                      : "portfolio-value red-text"
+                  }
+                >
+                  {totalProfitLoss >= 0 ? "+" : "-"}$
+                  {Math.abs(totalProfitLoss).toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </div>
+
+                <div className="portfolio-label">
+                  {profitPercent.toFixed(2)}%
+                </div>
               </div>
             </div>
           </div>
@@ -158,20 +336,40 @@ function Dashboard({ user, onLogout }) {
               <h3>Asset Allocation</h3>
 
               <div className="allocation-wrapper">
-                <div className="allocation-label-row top">
-                  <span className="green-text">GOOGL 11%</span>
-                  <span className="blue-text">AAPL 24%</span>
-                </div>
+                {allocationData.length === 0 ? (
+                  <div className="holding-row" style={{ marginTop: "20px" }}>
+                    No holdings to display.
+                  </div>
+                ) : (
+                  <>
+                    <div
+                      className="pie-chart"
+                      style={{ background: pieChartBackground }}
+                    >
+                      <div className="pie-center" />
+                    </div>
 
-                <div className="pie-chart">
-                  <div className="pie-center" />
-                </div>
-
-                <div className="allocation-label-row bottom">
-                  <span className="orange-text">MSFT 27%</span>
-                  <span className="red-text">TSLA 18%</span>
-                  <span className="purple-text">NVDA 20%</span>
-                </div>
+                    <div
+                      style={{
+                        marginTop: "22px",
+                        display: "flex",
+                        flexWrap: "wrap",
+                        justifyContent: "center",
+                        gap: "12px 18px",
+                      }}
+                    >
+                      {allocationData.map((item) => (
+                        <span
+                          key={item.ticker}
+                          className={dotClassToTextClass[item.dotClass] || ""}
+                          style={{ fontSize: "15px", fontWeight: 500 }}
+                        >
+                          {item.ticker} {item.percent.toFixed(1)}%
+                        </span>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -179,30 +377,38 @@ function Dashboard({ user, onLogout }) {
               <h3>Holdings</h3>
 
               <div className="holdings-list">
-                {holdings.map((holding) => (
-                  <div className="holding-row" key={holding.ticker}>
-                    <div className="holding-left">
-                      <span className={`holding-dot ${holding.dotClass}`} />
-                      <div>
-                        <div className="holding-ticker">{holding.ticker}</div>
-                        <div className="holding-name">{holding.name}</div>
+                {loading ? (
+                  <div className="holding-row">Loading holdings...</div>
+                ) : holdings.length === 0 ? (
+                  <div className="holding-row">No holdings found.</div>
+                ) : (
+                  holdings.map((holding) => (
+                    <div className="holding-row" key={holding.ticker}>
+                      <div className="holding-left">
+                        <span className={`holding-dot ${holding.dotClass}`} />
+                        <div>
+                          <div className="holding-ticker">
+                            {holding.ticker} ({holding.shares} shares)
+                          </div>
+                          <div className="holding-name">{holding.name}</div>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="holding-right">
-                      <div className="holding-value">{holding.value}</div>
-                      <div
-                        className={
-                          holding.change.startsWith("-")
-                            ? "holding-change red-text"
-                            : "holding-change green-text"
-                        }
-                      >
-                        {holding.change}
+                      <div className="holding-right">
+                        <div className="holding-value">{holding.value}</div>
+                        <div
+                          className={
+                            holding.change.startsWith("-")
+                              ? "holding-change red-text"
+                              : "holding-change green-text"
+                          }
+                        >
+                          {holding.change}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           </div>

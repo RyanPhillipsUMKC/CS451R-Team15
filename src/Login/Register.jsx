@@ -5,7 +5,8 @@ import { UserAuth } from "../authContext";
 import "./LoginAndRegisterStyle.css";
 
 export default function RegisterPage() {
-  const [fullName, setFullName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
@@ -20,7 +21,7 @@ export default function RegisterPage() {
   e.preventDefault();
   setError("");
 
-  if (!fullName || !email || !password || !repeatPassword) {
+  if (!firstName || !lastName || !email || !password || !repeatPassword) {
     setError("Please enter all fields below.");
     return;
   }
@@ -38,7 +39,7 @@ export default function RegisterPage() {
   setLoading(true);
 
   try {
-    const result = await signUpNewUser(email, password);
+    const result = await signUpNewUser(email, password, firstName, lastName);
 
     if (result?.error) {
       setError(result.error.message || "Failed to create account.");
@@ -74,12 +75,23 @@ export default function RegisterPage() {
         </div>
 
         <label className="auth-label">
-          Full Name
+          First Name
           <input
             type="text"
-            placeholder="John Doe"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
+            placeholder="John"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            className="auth-input"
+          />
+        </label>
+
+        <label className="auth-label">
+          Last Name
+          <input
+            type="text"
+            placeholder="Doe"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
             className="auth-input"
           />
         </label>

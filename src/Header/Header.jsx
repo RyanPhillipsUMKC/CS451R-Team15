@@ -88,6 +88,15 @@ function AppHeader() {
             >
               Portfolio Analysis
             </Link>
+
+            <Link
+              to="/transact"
+              className="nav-dropdown-link"
+              onClick={() => setNavMenuOpen(false)}
+            >
+              Transact
+            </Link>
+
           </div>
         </div>
       </div>
