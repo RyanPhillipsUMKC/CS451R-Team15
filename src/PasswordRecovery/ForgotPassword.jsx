@@ -79,9 +79,9 @@ export default function ForgotPasswordPage() {
         </button>
 
         <p className="auth-footer-text">
-          Remembered your password?{" "}
+          Changed your mind?{" "}
           <Link to="/signin" className="auth-text-link">
-            Back to login
+            Go back
           </Link>
         </p>
       </form>

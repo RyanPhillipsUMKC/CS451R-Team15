@@ -1,296 +1,451 @@
-import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import AppHeader from "../Header/Header";
 import { UserAuth } from "../authContext";
+import { useNavigate } from "react-router-dom";
+import "../Dashboard/DashboardStyle.css";
+import "../Login/LoginAndRegisterStyle.css";
 
-export default function Profile({ onLogout }) {
-  const { userEmail, userPassword, signOut } = UserAuth();
+export default function Profile() {
+  const {
+    user,
+    getUserProfile,
+    getUserFinancialSummary,
+    getUserTransactions,
+  } = UserAuth();
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [profile, setProfile] = useState(null);
+  const [summary, setSummary] = useState(null);
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
-  const [glowIntensity, setGlowIntensity] = useState(20);
 
-  const canvasRef = useRef(null);
-  const drawing = useRef(false);
+  const navigate = useNavigate();
 
-  // Glow animation
   useEffect(() => {
-    const interval = setInterval(() => {
-      setGlowIntensity((prev) => (prev >= 35 ? 20 : prev + 1));
-    }, 100);
-    return () => clearInterval(interval);
-  }, []);
+    async function loadProfilePage() {
+      setLoading(true);
+      setMessage("");
 
-  // Canvas setup
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
+      try {
+        const [profileResult, summaryResult, transactionsResult] =
+          await Promise.all([
+            getUserProfile(),
+            getUserFinancialSummary(),
+            getUserTransactions(),
+          ]);
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+        if (profileResult?.success) {
+          setProfile(profileResult.data);
+        } else {
+          setProfile(null);
+        }
 
-    const handleResize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
+        if (summaryResult?.success) {
+          setSummary(summaryResult.data);
+        } else {
+          setSummary(null);
+        }
 
-    window.addEventListener("resize", handleResize);
+        if (transactionsResult?.success) {
+          setTransactions(transactionsResult.data || []);
+        } else {
+          setTransactions([]);
+        }
 
-    const startDrawing = (e) => {
-      drawing.current = true;
-      ctx.beginPath();
-      ctx.moveTo(e.clientX, e.clientY);
-    };
+        if (!profileResult?.success && !summaryResult?.success) {
+          setMessage("Could not load profile data.");
+        }
+      } catch (error) {
+        console.error(error);
+        setMessage("Unexpected error loading profile page.");
+      }
 
-    const draw = (e) => {
-      if (!drawing.current) return;
-      ctx.lineTo(e.clientX, e.clientY);
-      ctx.strokeStyle = "#38b2ac";
-      ctx.lineWidth = 2;
-      ctx.shadowColor = "#3b82f6";
-      ctx.shadowBlur = 6;
-      ctx.stroke();
-    };
-
-    const stopDrawing = () => {
-      drawing.current = false;
-      ctx.closePath();
-    };
-
-    canvas.addEventListener("mousedown", startDrawing);
-    canvas.addEventListener("mousemove", draw);
-    canvas.addEventListener("mouseup", stopDrawing);
-    canvas.addEventListener("mouseout", stopDrawing);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      canvas.removeEventListener("mousedown", startDrawing);
-      canvas.removeEventListener("mousemove", draw);
-      canvas.removeEventListener("mouseup", stopDrawing);
-      canvas.removeEventListener("mouseout", stopDrawing);
-    };
-  }, []);
-
-  // SAFE USER from context
-  const safeUser = {
-    email: userEmail || "guest@example.com",
-    password: userPassword || "1234",
-  };
-
-  const handleResetPassword = () => {
-    setMessage("");
-
-    if (currentPassword !== safeUser.password) {
-      setMessage("Current password is incorrect.");
-      return;
+      setLoading(false);
     }
 
-    if (newPassword.length < 4) {
-      setMessage("New password must be at least 4 characters.");
-      return;
-    }
+    loadProfilePage();
+  }, [getUserProfile, getUserFinancialSummary, getUserTransactions]);
 
-    if (newPassword !== confirmPassword) {
-      setMessage("Passwords do not match.");
-      return;
-    }
+  const metadata = user?.user_metadata || {};
+  const holdingsCount = Object.keys(summary?.holdings || {}).length;
+  const transactionCount = transactions.length;
 
-    setMessage("Password updated (demo only - not saved to Supabase)");
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-  };
+  const fullName = `${metadata?.first_name || ""} ${metadata?.last_name || ""}`.trim();
+
+  const formattedCreatedAt = useMemo(() => {
+    const rawDate = profile?.created_at || user?.created_at;
+    if (!rawDate) return "N/A";
+
+    return new Date(rawDate).toLocaleString();
+  }, [profile?.created_at, user?.created_at]);
+
+  const formattedLastSignIn = useMemo(() => {
+    const rawDate = user?.last_sign_in_at;
+    if (!rawDate) return "N/A";
+
+    return new Date(rawDate).toLocaleString();
+  }, [user?.last_sign_in_at]);
+
+  function formatCurrency(value) {
+    return `$${Number(value || 0).toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  }
+
+  function escapeCsvValue(value) {
+    const stringValue =
+      value === null || value === undefined ? "" : String(value);
+    return `"${stringValue.replace(/"/g, '""')}"`;
+  }
+
+  function buildCsvContent() {
+    const rows = [];
+
+    rows.push(["Profile Field", "Value"]);
+    rows.push(["User ID", user?.id || ""]);
+    rows.push(["Email", user?.email || ""]);
+    rows.push(["First Name", metadata?.first_name || ""]);
+    rows.push(["Last Name", metadata?.last_name || ""]);
+    rows.push(["Created At", profile?.created_at || user?.created_at || ""]);
+    rows.push(["Last Sign In", user?.last_sign_in_at || ""]);
+    rows.push(["Starting Funds", summary?.startingFunds ?? ""]);
+    rows.push(["Cash Balance", summary?.cashBalance ?? ""]);
+    rows.push(["Total Buy Cost", summary?.totalBuyCost ?? ""]);
+    rows.push(["Total Sell Proceeds", summary?.totalSellProceeds ?? ""]);
+    rows.push(["Open Holdings Count", holdingsCount]);
+    rows.push(["Transaction Count", transactionCount]);
+    rows.push([]);
+
+    rows.push(["Transactions"]);
+    rows.push([
+      "Created At",
+      "Ticker",
+      "Company",
+      "Type",
+      "Quantity",
+      "Price",
+      "Total",
+    ]);
+
+    transactions.forEach((tx) => {
+      const quantity = Number(tx?.quantity || 0);
+      const price = Number(tx?.price || 0);
+
+      rows.push([
+        tx?.created_at || "",
+        tx?.Stocks?.ticker || "",
+        tx?.Stocks?.company_name || "",
+        tx?.type || "",
+        quantity,
+        price,
+        quantity * price,
+      ]);
+    });
+
+    return rows
+      .map((row) => row.map((cell) => escapeCsvValue(cell)).join(","))
+      .join("\n");
+  }
+
+  function handleExportCsv() {
+    const confirmed = window.confirm(
+      "Do you want to export your profile and transaction data to a CSV file?"
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const csvContent = buildCsvContent();
+      const blob = new Blob([csvContent], {
+        type: "text/csv;charset=utf-8;",
+      });
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const safeName = fullName
+        ? fullName.toLowerCase().replace(/\s+/g, "_")
+        : "user";
+
+      link.href = url;
+      link.setAttribute("download", `${safeName}_profile_data.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      setMessage("CSV exported successfully.");
+    } catch (error) {
+      console.error(error);
+      setMessage("Failed to export CSV.");
+    }
+  }
 
   return (
-    <div style={styles.page}>
-      <canvas ref={canvasRef} style={{ position: "absolute", top: 0, left: 0 }} />
+    <div className="app">
+      <AppHeader />
 
-      <div
-        style={{
-          ...styles.card,
-          boxShadow: `0 0 ${glowIntensity}px #3b82f6, 0 0 ${glowIntensity * 2}px #38b2ac`,
-        }}
-      >
-        <h1 style={styles.title}>User Profile</h1>
-
-        {/* EMAIL */}
-        <div style={styles.field}>
-          <label>Email</label>
-          <input type="text" value={safeUser.email} readOnly style={styles.input} />
+      <section className="hero" style={{ padding: "32px 3vw 0" }}>
+        <div className="hero-icon">
+          <svg
+            viewBox="0 0 24 24"
+            width="26"
+            height="26"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M20 21a8 8 0 0 0-16 0" />
+            <circle cx="12" cy="8" r="4" />
+          </svg>
         </div>
 
-        {/* PASSWORD */}
-        <div style={styles.field}>
-          <label>Password</label>
-          <div style={styles.passwordWrapper}>
-            <input
-              type={showPassword ? "text" : "password"}
-              value={safeUser.password}
-              readOnly
-              style={styles.input}
-            />
-            <button
-              style={styles.eyeButton}
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? "🔓" : "🔒"}
-            </button>
+        <div>
+          <h1>Profile</h1>
+          <p>View your account information, portfolio summary, and export your data.</p>
+        </div>
+      </section>
+
+      <main className="main-content">
+        <section className="summary-grid">
+          <div className="card stat-card">
+            <div className="stat-header">
+              <span className="stat-icon blue-text">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="20"
+                  height="20"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="8" r="4" />
+                  <path d="M4 20a8 8 0 0 1 16 0" />
+                </svg>
+              </span>
+              <span>Account Details</span>
+            </div>
+
+            <div style={{ marginTop: "22px", display: "grid", gap: "14px" }}>
+              <div>
+                <div className="portfolio-label">Full Name</div>
+                <div className="portfolio-value" style={{ fontSize: "24px" }}>
+                  {fullName || "N/A"}
+                </div>
+              </div>
+
+              <div>
+                <div className="portfolio-label">Email</div>
+                <div className="holding-value">{user?.email || "N/A"}</div>
+              </div>
+
+              <div>
+                <div className="portfolio-label">User ID</div>
+                <div
+                  className="holding-name"
+                  style={{ wordBreak: "break-all", marginTop: "8px" }}
+                >
+                  {user?.id || "N/A"}
+                </div>
+              </div>
+
+              <div>
+                <div className="portfolio-label">Account Created</div>
+                <div className="holding-value">{formattedCreatedAt}</div>
+              </div>
+
+              <div>
+                <div className="portfolio-label">Last Sign In</div>
+                <div className="holding-value">{formattedLastSignIn}</div>
+              </div>
+
+              <div>
+                <button
+                  className="danger-button"
+                  onClick={() => navigate("/forgotpassword")}
+                >
+                  Reset Password
+                </button>
+              </div>
+
+            </div>
           </div>
-        </div>
 
-        {/* RESET SECTION */}
-        <div style={styles.field}>
-          <label>Current Password</label>
-          <input
-            type="password"
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-            style={styles.input}
-          />
+          <div className="card stat-card">
+            <div className="stat-header">
+              <span className="stat-icon green-text">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="20"
+                  height="20"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M4 12h16" />
+                  <path d="M12 4v16" />
+                </svg>
+              </span>
+              <span>Export Data</span>
+            </div>
 
-          <label>New Password</label>
-          <input
-            type="password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            style={styles.input}
-          />
+            <div className="stat-subtitle" style={{ marginTop: "20px" }}>
+              Download your account profile and transaction history as a CSV file.
+            </div>
 
-          <label>Confirm Password</label>
-          <input
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            style={styles.input}
-          />
+            <button
+              className="auth-button"
+              onClick={handleExportCsv}
+              style={{ marginTop: "22px", width: "100%" }}
+              disabled={loading}
+            >
+              Export My Data to CSV
+            </button>
 
-          <button style={styles.resetButton} onClick={handleResetPassword}>
-            Reset Password
-          </button>
+            <div className="auth-hint" style={{ marginTop: "14px", textAlign: "left" }}>
+              You will be asked to confirm before the CSV is generated.
+            </div>
 
-          {message && <div style={styles.message}>{message}</div>}
-        </div>
+            {message && (
+              <div
+                className="auth-hint"
+                style={{ marginTop: "14px", textAlign: "left" }}
+              >
+                {message}
+              </div>
+            )}
+          </div>
+        </section>
 
-        <Link to="/dashboard" style={styles.backButton}>
-          Back to Dashboard
-        </Link>
+        <section className="card portfolio-card">
+          <div className="portfolio-top">
+            <h2>Financial Summary</h2>
 
-        <button
-          style={styles.logoutButton}
-          onClick={() => {
-            signOut();
-            if (onLogout) onLogout();
-          }}
-        >
-          Logout
-        </button>
-      </div>
+            <div className="portfolio-stats">
+              <div>
+                <div className="portfolio-label">Starting Funds</div>
+                <div className="portfolio-value">
+                  {loading ? "Loading..." : formatCurrency(summary?.startingFunds)}
+                </div>
+              </div>
+
+              <div>
+                <div className="portfolio-label">Cash Balance</div>
+                <div className="portfolio-value">
+                  {loading ? "Loading..." : formatCurrency(summary?.cashBalance)}
+                </div>
+              </div>
+
+              <div>
+                <div className="portfolio-label">Open Holdings</div>
+                <div className="portfolio-value">
+                  {loading ? "Loading..." : holdingsCount}
+                </div>
+              </div>
+
+              <div>
+                <div className="portfolio-label">Transactions</div>
+                <div className="portfolio-value">
+                  {loading ? "Loading..." : transactionCount}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="portfolio-divider" />
+
+          <div className="portfolio-bottom" style={{ gridTemplateColumns: "1fr 1fr" }}>
+            <div className="allocation-section">
+              <h3>Profile Data</h3>
+
+              <div className="holdings-list">
+                <div className="holding-row">
+                  <div>
+                    <div className="holding-ticker">First Name</div>
+                    <div className="holding-name">{metadata?.first_name || "N/A"}</div>
+                  </div>
+                </div>
+
+                <div className="holding-row">
+                  <div>
+                    <div className="holding-ticker">Last Name</div>
+                    <div className="holding-name">{metadata?.last_name || "N/A"}</div>
+                  </div>
+                </div>
+
+                <div className="holding-row">
+                  <div>
+                    <div className="holding-ticker">Email Verified</div>
+                    <div className="holding-name">
+                      {user?.email_confirmed_at ? "Yes" : "No"}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="holding-row">
+                  <div>
+                    <div className="holding-ticker">Starting Funds</div>
+                    <div className="holding-name">
+                      {formatCurrency(profile?.starting_funds)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="holdings-section">
+              <h3>Recent Transactions</h3>
+
+              <div className="holdings-list">
+                {loading ? (
+                  <div className="holding-row">Loading transactions...</div>
+                ) : transactions.length === 0 ? (
+                  <div className="holding-row">No transactions found.</div>
+                ) : (
+                  transactions.slice(0, 5).map((tx) => {
+                    const quantity = Number(tx?.quantity || 0);
+                    const price = Number(tx?.price || 0);
+                    const total = quantity * price;
+
+                    return (
+                      <div className="holding-row" key={tx.id}>
+                        <div className="holding-left">
+                          <span
+                            className={`holding-dot ${
+                              tx.type === "buy" ? "dot-green" : "dot-red"
+                            }`}
+                          />
+                          <div>
+                            <div className="holding-ticker">
+                              {tx?.Stocks?.ticker || "N/A"} - {tx?.type || "N/A"}
+                            </div>
+                            <div className="holding-name">
+                              {tx?.Stocks?.company_name || "Unknown company"}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="holding-right">
+                          <div className="holding-value">{formatCurrency(total)}</div>
+                          <div className="holding-change" style={{ color: "#9ca3af" }}>
+                            {new Date(tx.created_at).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
     </div>
   );
 }
-
-const styles = {
-  page: {
-    minHeight: "100vh",
-    width: "100vw",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    background: "#0f1115",
-    color: "white",
-    fontFamily: "'Poppins', sans-serif",
-    overflow: "hidden",
-    position: "relative",
-  },
-
-  card: {
-    position: "relative",
-    width: 420,
-    padding: 35,
-    borderRadius: 16,
-    background: "rgba(30, 33, 45, 0.95)",
-    display: "flex",
-    flexDirection: "column",
-    gap: 20,
-    border: "1px solid #3b82f6",
-    transition: "transform 0.3s, box-shadow 0.3s",
-  },
-
-  title: {
-    textAlign: "center",
-    marginBottom: 15,
-    fontSize: 30,
-    fontWeight: 700,
-    color: "#3b82f6",
-  },
-
-  field: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 8,
-  },
-
-  input: {
-    padding: "12px",
-    borderRadius: "8px",
-    border: "1px solid #3b82f6",
-    background: "#0f1115",
-    color: "white",
-    width: "100%",
-  },
-
-  passwordWrapper: {
-    display: "flex",
-    alignItems: "center",
-    gap: 8,
-  },
-
-  eyeButton: {
-    padding: "8px 12px",
-    borderRadius: "8px",
-    border: "none",
-    background: "#3b82f6",
-    cursor: "pointer",
-  },
-
-  backButton: {
-    marginTop: 10,
-    textAlign: "center",
-    padding: "10px",
-    background: "linear-gradient(90deg, #3b82f6, #38bdf8)",
-    borderRadius: "8px",
-    textDecoration: "none",
-    color: "white",
-    fontWeight: "600",
-  },
-
-  logoutButton: {
-    marginTop: 10,
-    padding: "10px",
-    borderRadius: "8px",
-    border: "none",
-    background: "linear-gradient(90deg, #f56565, #fc8181)",
-    color: "white",
-    fontWeight: 600,
-    cursor: "pointer",
-  },
-
-  resetButton: {
-    marginTop: 6,
-    padding: "10px",
-    borderRadius: "8px",
-    border: "none",
-    background: "linear-gradient(90deg, #38b2ac, #4fd1c5)",
-    color: "white",
-    fontWeight: 600,
-    cursor: "pointer",
-  },
-
-  message: {
-    marginTop: 6,
-    fontSize: 14,
-    color: "#48bb78",
-  },
-};
