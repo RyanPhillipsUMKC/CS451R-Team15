@@ -43,9 +43,6 @@ export const AuthContextProvider = ({ children }) => {
         return { success: false, error: error.message };
       }
 
-      setUserEmail(email);
-      setUserPassword(password);
-
       return { success: true, data };
     } catch (error) {
       console.error("Unexpected error during sign-in:", error.message);
@@ -84,9 +81,6 @@ export const AuthContextProvider = ({ children }) => {
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) console.error("Error signing out:", error);
-
-    setUserEmail("");
-    setUserPassword("");
   };
 
   // Reset password
@@ -457,6 +451,79 @@ export const AuthContextProvider = ({ children }) => {
     }
   };
 
+  const getLiveMarketData = async () => {
+    try {
+      // from project public folder
+      const response = await fetch("/NASDAQ_20260422.csv");
+
+      if (!response.ok) {
+        throw new Error("Failed to load market data CSV");
+      }
+
+      const text = await response.text();
+
+      const rows = text.split("\n").filter((row) => row.trim() !== "");
+
+      // Assume first row is header
+      const headers = rows[0].split(",");
+
+      const data = rows.slice(1).map((row) => {
+        const values = row.split(",");
+
+        const entry = {};
+        headers.forEach((header, index) => {
+          entry[header.trim()] = values[index]?.trim();
+        });
+
+        return entry;
+      });
+
+      // Convert into lookup map by ticker
+      const marketMap = {};
+
+      data.forEach((stock) => {
+        const ticker = stock.Symbol || stock.symbol || stock.Ticker;
+
+        if (!ticker) return;
+
+        marketMap[ticker] = {
+          ticker,
+          companyName: stock.Name || stock.company_name,
+          currentPrice: Number(stock.LastSale || stock.price || 0),
+        };
+      });
+
+      return { success: true, data: marketMap };
+    } catch (error) {
+      console.error("Error loading mock market data:", error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  const syncStocksFromCsv = async (marketData) => {
+    try {
+      const rows = Object.values(marketData).map((stock) => ({
+        ticker: stock.ticker.toUpperCase(),
+        company_name: stock.companyName,
+      }));
+
+      const { data, error } = await supabase
+        .from("Stocks")
+        .upsert(rows, {
+          onConflict: "ticker",
+          ignoreDuplicates: true,
+        });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
   const user = session?.user ?? null;
 
   return (
@@ -476,6 +543,8 @@ export const AuthContextProvider = ({ children }) => {
         addToCurrentUserStartingFunds,
         createMockTransaction,
         getUserFinancialSummary,
+        getLiveMarketData,
+        syncStocksFromCsv,
         session,
         user
       }} >
