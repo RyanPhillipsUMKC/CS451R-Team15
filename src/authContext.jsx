@@ -482,14 +482,14 @@ export const AuthContextProvider = ({ children }) => {
       const marketMap = {};
 
       data.forEach((stock) => {
-        const ticker = stock.Symbol || stock.symbol || stock.Ticker;
+        const ticker = stock.Symbol
 
         if (!ticker) return;
 
         marketMap[ticker] = {
           ticker,
-          companyName: stock.Name || stock.company_name,
-          currentPrice: Number(stock.LastSale || stock.price || 0),
+          companyName: stock.CompanyName,
+          currentPrice: Number(stock.Price || 0),
         };
       });
 

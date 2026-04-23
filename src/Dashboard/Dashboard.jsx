@@ -7,34 +7,12 @@ function Dashboard() {
   const [startingFunds, setStartingFunds] = useState(0);
   const [cashBalance, setCashBalance] = useState(0);
   const [realHoldings, setRealHoldings] = useState({});
+  const [liveMarketData, setLiveMarketData] = useState({});
   const [loading, setLoading] = useState(true);
 
-  const { user, getUserFinancialSummary } = UserAuth();
+  const { user, getUserFinancialSummary, getLiveMarketData } = UserAuth();
 
   const metadata = user?.user_metadata;
-
-  const mockMarketData = {
-    AAPL: {
-      currentPrice: 182.5,
-      dotClass: "dot-blue",
-    },
-    GOOGL: {
-      currentPrice: 178.25,
-      dotClass: "dot-green",
-    },
-    MSFT: {
-      currentPrice: 441.5,
-      dotClass: "dot-orange",
-    },
-    TSLA: {
-      currentPrice: 251.75,
-      dotClass: "dot-red",
-    },
-    NVDA: {
-      currentPrice: 948.0,
-      dotClass: "dot-purple",
-    },
-  };
 
   const dotClassToColor = {
     "dot-blue": "#3b82f6",
@@ -52,11 +30,22 @@ function Dashboard() {
     "dot-purple": "purple-text",
   };
 
+  const fallbackDotClasses = [
+    "dot-blue",
+    "dot-green",
+    "dot-orange",
+    "dot-red",
+    "dot-purple",
+  ];
+
   useEffect(() => {
     async function loadDashboardData() {
       setLoading(true);
 
-      const summaryResult = await getUserFinancialSummary();
+      const [summaryResult, marketResult] = await Promise.all([
+        getUserFinancialSummary(),
+        getLiveMarketData(),
+      ]);
 
       if (summaryResult.success) {
         const summary = summaryResult.data;
@@ -70,30 +59,38 @@ function Dashboard() {
         setRealHoldings({});
       }
 
+      if (marketResult.success) {
+        setLiveMarketData(marketResult.data ?? {});
+      } else {
+        console.error(marketResult.error);
+        setLiveMarketData({});
+      }
+
       setLoading(false);
     }
 
     loadDashboardData();
-  }, [getUserFinancialSummary]);
+  }, [getUserFinancialSummary, getLiveMarketData]);
 
   const holdings = useMemo(() => {
     const holdingsArray = Object.values(realHoldings ?? {});
 
-    return holdingsArray.map((holding) => {
-      const market = mockMarketData[holding.ticker] ?? {
-        currentPrice: 100,
-        dotClass: "dot-blue",
+    return holdingsArray.map((holding, index) => {
+      const market = liveMarketData[holding.ticker] ?? {
+        currentPrice: 0,
       };
 
       const shares = Number(holding.shares || 0);
       const averageCost = Number(holding.averageCost || 0);
       const totalCost = Number(holding.totalCost || 0);
+      const currentPrice = Number(market.currentPrice || 0);
 
-      const currentValue = shares * market.currentPrice;
+      const currentValue = shares * currentPrice;
       const gainLoss = currentValue - totalCost;
+      const percentChange = totalCost > 0 ? (gainLoss / totalCost) * 100 : 0;
 
-      const percentChange =
-        totalCost > 0 ? (gainLoss / totalCost) * 100 : 0;
+      const dotClass =
+        fallbackDotClasses[index % fallbackDotClasses.length];
 
       return {
         ticker: holding.ticker,
@@ -101,16 +98,17 @@ function Dashboard() {
         shares,
         averageCost,
         totalCost,
+        currentPrice,
         valueNumber: currentValue,
         value: `$${currentValue.toLocaleString(undefined, {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         })}`,
         change: `${percentChange >= 0 ? "+" : ""}${percentChange.toFixed(2)}%`,
-        dotClass: market.dotClass,
+        dotClass,
       };
     });
-  }, [realHoldings]);
+  }, [realHoldings, liveMarketData]);
 
   const totalPortfolioValue = useMemo(() => {
     return holdings.reduce((sum, holding) => sum + holding.valueNumber, 0);
@@ -158,34 +156,6 @@ function Dashboard() {
     });
 
     return `conic-gradient(${segments.join(", ")})`;
-  }, [allocationData]);
-
-
-  const pieLabels = useMemo(() => {
-    if (allocationData.length === 0) return [];
-
-    let currentDegree = 0;
-
-    return allocationData.map((item) => {
-      const sliceAngle = (item.percent / 100) * 360;
-
-      const midAngle = currentDegree + sliceAngle / 2;
-      currentDegree += sliceAngle;
-
-      // convert to radians
-      const rad = (midAngle - 90) * (Math.PI / 180);
-
-      const radius = 90; // distance from center (tweak this)
-
-      const x = Math.cos(rad) * radius;
-      const y = Math.sin(rad) * radius;
-
-      return {
-        ...item,
-        x,
-        y,
-      };
-    });
   }, [allocationData]);
 
   return (
