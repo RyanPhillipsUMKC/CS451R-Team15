@@ -78,7 +78,7 @@ function AppHeader() {
               className="nav-dropdown-link"
               onClick={() => setNavMenuOpen(false)}
             >
-              Charts
+              Market Analysis
             </Link>
 
             <Link

@@ -1,23 +1,21 @@
 import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
 import AppHeader from "../Header/Header";
+import { UserAuth } from "../authContext";
 import "./PortfolioStyle.css";
 
-// ─── Mock Data ─────────────────────────────────────────────────────────────────
-// TODO: Replace with Supabase queries once schema is finalized
-const MOCK_HOLDINGS = [
-  { ticker: "AAPL", name: "Apple Inc.",     shares: 45, value: 8926.00,  change: "+8.00%", dotClass: "dot-blue",   exchange: "NASDAQ" },
-  { ticker: "GOOGL", name: "Alphabet Inc.", shares: 12, value: 4285.50,  change: "+5.20%", dotClass: "dot-green",  exchange: "NASDAQ" },
-  { ticker: "MSFT", name: "Microsoft Corp.",shares: 31, value: 10154.00, change: "+3.90%", dotClass: "dot-orange", exchange: "NASDAQ" },
-  { ticker: "TSLA", name: "Tesla Inc.",     shares: 40, value: 6840.00,  change: "-1.40%", dotClass: "dot-red",    exchange: "NASDAQ" },
-  { ticker: "NVDA", name: "NVIDIA Corp.",   shares: 18, value: 7403.50,  change: "+6.10%", dotClass: "dot-purple", exchange: "NASDAQ" },
-];
+// ─── Market Data ───────────────────────────────────────────────────────────────
+// Single source of truth for mock prices, colors, and exchange for all
+// supported tickers. Replace currentPrice values with a live API feed when ready.
+const MARKET_DATA = {
+  AAPL:  { currentPrice: 182.50,  dotClass: "dot-blue",   exchange: "NASDAQ", company_name: "Apple Inc." },
+  GOOGL: { currentPrice: 178.25,  dotClass: "dot-green",  exchange: "NASDAQ", company_name: "Alphabet Inc." },
+  MSFT:  { currentPrice: 441.50,  dotClass: "dot-orange", exchange: "NASDAQ", company_name: "Microsoft Corporation" },
+  TSLA:  { currentPrice: 251.75,  dotClass: "dot-red",    exchange: "NASDAQ", company_name: "Tesla, Inc." },
+  NVDA:  { currentPrice: 948.00,  dotClass: "dot-purple", exchange: "NASDAQ", company_name: "NVIDIA Corporation" },
+};
 
-const MOCK_CASH = 25000.00;
-const MOCK_PORTFOLIO_VALUE = MOCK_HOLDINGS.reduce((sum, h) => sum + h.value, 0);
-
-// ─── Mock AI Recommendations ──────────────────────────────────────────────────
-// TODO: Replace with live Ollama API call (see analyzePortfolio below)
+// ─── Mock Recommendations ──────────────────────────────────────────────────────
+// Shown as placeholder until the user clicks "Analyze Portfolio".
 const MOCK_RECOMMENDATIONS = [
   {
     ticker: "AAPL",
@@ -57,32 +55,56 @@ const MOCK_RECOMMENDATIONS = [
 ];
 
 // ─── Ollama Integration ────────────────────────────────────────────────────────
-// TODO: Wire up Supabase to pull real holdings + cash, then pass to Ollama.
-// Ollama runs locally at http://localhost:11434 by default.
-// The prompt is constructed here so the LLM has full portfolio context.
-async function analyzePortfolio(holdings, cash, model = "llama3") {
-  const prompt = `
-You are a financial analyst assistant. A user's portfolio is listed below.
-Analyze each holding and provide a BUY, HOLD, or SELL recommendation.
-Also factor in that the user has $${cash.toFixed(2)} in available cash for new purchases.
+// Sends real holdings + cash to a locally-running Ollama instance.
+// Expects a JSON array back: [{ ticker, action, confidence, reasoning }, ...]
+// Recommendations cover both current holdings (BUY/HOLD/SELL) and potential new
+// buys from the full supported ticker list.
+async function analyzePortfolio(holdings, cashBalance, model = "llama3.2") {
+  const holdingsText = holdings
+    .map((h) => {
+      const market = MARKET_DATA[h.ticker];
+      const currentPrice = market?.currentPrice ?? h.averageCost;
+      const currentValue = h.shares * currentPrice;
+      const unrealizedPnL = currentValue - h.totalCost;
+      const unrealizedPct =
+        h.totalCost > 0 ? (unrealizedPnL / h.totalCost) * 100 : 0;
+      return (
+        `- ${h.ticker} (${h.company_name}): ` +
+        `${h.shares} shares, avg cost $${h.averageCost.toFixed(2)}/share, ` +
+        `current price $${currentPrice.toFixed(2)}/share, ` +
+        `current value $${currentValue.toFixed(2)}, ` +
+        `unrealized P&L ${unrealizedPnL >= 0 ? "+" : ""}$${unrealizedPnL.toFixed(2)} ` +
+        `(${unrealizedPct >= 0 ? "+" : ""}${unrealizedPct.toFixed(1)}%)`
+      );
+    })
+    .join("\n");
 
-Portfolio:
-${holdings
-  .map(
-    (h) =>
-      `- ${h.ticker} (${h.name}): ${h.shares} shares, current value $${h.value.toFixed(2)}, recent change ${h.change}`
-  )
-  .join("\n")}
+  const tickerList = holdings
+    .map((h) => `{ "ticker": "${h.ticker}", "action": "BUY|HOLD|SELL", "confidence": 0-100, "reasoning": "..." }`)
+    .join(",\n  ");
 
-For each ticker, respond with a JSON array in this exact format (no extra text):
+  const prompt = `You are a financial analyst assistant for a mock stock trading application.
+
+Analyze the user's current holdings and provide a BUY (add more shares), HOLD, or SELL recommendation for EACH held position only.
+
+Available cash: $${cashBalance.toFixed(2)}
+
+Current holdings:
+${holdingsText}
+
+Instructions:
+- Only provide recommendations for the stocks listed above — do not suggest other tickers.
+- BUY means the user should add more shares of that stock.
+- HOLD means keep the current position.
+- SELL means reduce or exit the position.
+- Factor in unrealized P&L, current valuation, and available cash.
+- Confidence should be a number 0-100.
+- Keep reasoning concise (1-2 sentences).
+
+Respond with ONLY a JSON array covering exactly these tickers, no other text:
 [
-  { "ticker": "AAPL", "action": "BUY|HOLD|SELL", "confidence": 0-100, "reasoning": "..." },
-  ...
-]
-`;
-
-  // TODO: Supabase call here to fetch real portfolio data before running analysis
-  // const { data, error } = await supabase.from("holdings").select("*").eq("user_id", userId);
+  ${tickerList}
+]`;
 
   const response = await fetch("http://localhost:11434/api/generate", {
     method: "POST",
@@ -157,45 +179,98 @@ function ActionBadge({ action }) {
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
-function Portfolio({ user }) {
-  const [selectedTicker, setSelectedTicker] = useState(MOCK_HOLDINGS[0].ticker);
-  const [recommendations, setRecommendations] = useState(MOCK_RECOMMENDATIONS);
+function Portfolio() {
+  const { getUserFinancialSummary } = UserAuth();
+
+  // Live data from Supabase
+  const [cashBalance, setCashBalance] = useState(0);
+  const [portfolioValue, setPortfolioValue] = useState(0);
+  const [holdings, setHoldings] = useState([]);
+  const [dataLoading, setDataLoading] = useState(true);
+
+  // AI analysis state
+  const [recommendations, setRecommendations] = useState([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState(null);
 
-  const selectedHolding = MOCK_HOLDINGS.find((h) => h.ticker === selectedTicker);
+  // Chart state — default to first supported ticker
+  const allTickers = Object.keys(MARKET_DATA);
+  const [selectedTicker, setSelectedTicker] = useState(allTickers[0]);
 
+  // ── Load real holdings + cash from Supabase ────────────────────────────────
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      setDataLoading(true);
+
+      const result = await getUserFinancialSummary();
+
+      if (cancelled) return;
+
+      if (result.success) {
+        const { cashBalance: cash, holdings: holdingsMap } = result.data;
+
+        const holdingsArray = Object.values(holdingsMap ?? {});
+
+        // Compute current portfolio value using mock market prices
+        const totalPortfolioValue = holdingsArray.reduce((sum, h) => {
+          const price = MARKET_DATA[h.ticker]?.currentPrice ?? h.averageCost;
+          return sum + h.shares * price;
+        }, 0);
+
+        setCashBalance(Number(cash ?? 0));
+        setPortfolioValue(totalPortfolioValue);
+        setHoldings(holdingsArray);
+
+        // Default chart to the first held ticker if available
+        if (holdingsArray.length > 0 && MARKET_DATA[holdingsArray[0].ticker]) {
+          setSelectedTicker(holdingsArray[0].ticker);
+        }
+      } else {
+        console.error("Failed to load financial summary:", result.error);
+      }
+
+      setDataLoading(false);
+    }
+
+    load();
+
+    return () => { cancelled = true; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Run Ollama analysis ────────────────────────────────────────────────────
   async function handleAnalyze() {
+    if (holdings.length === 0) return;
     setIsAnalyzing(true);
     setAnalysisError(null);
     try {
-      // TODO: pass real Supabase holdings + cash once connected
-      const recs = await analyzePortfolio(MOCK_HOLDINGS, MOCK_CASH);
+      const recs = await analyzePortfolio(holdings, cashBalance);
       setRecommendations(recs);
     } catch (err) {
       console.error(err);
       setAnalysisError(
-        "Could not reach Ollama. Make sure it is running locally (ollama serve) and a model is pulled."
+        "Could not reach Ollama. Make sure it is running locally (ollama serve) and a model is pulled (ollama pull llama3.2)."
       );
-      // Fall back to mock data so the UI stays populated
-      setRecommendations(MOCK_RECOMMENDATIONS);
     } finally {
       setIsAnalyzing(false);
     }
   }
 
   const fmt = (n) =>
-    n.toLocaleString("en-US", { style: "currency", currency: "USD" });
+    Number(n).toLocaleString("en-US", { style: "currency", currency: "USD" });
+
+  const selectedMarket = MARKET_DATA[selectedTicker];
+
+  // For the chart selector, show all tickers — highlight any the user holds
+  const heldTickers = new Set(holdings.map((h) => h.ticker));
 
   return (
     <div className="app">
-      {/* ── Topbar ── */}
       <AppHeader />
 
-      {/* ── Hero ── */}
       <section className="hero">
         <div className="hero-icon">
-          {/* Brain + chart icon */}
           <svg
             viewBox="0 0 24 24"
             width="26"
@@ -231,7 +306,9 @@ function Portfolio({ user }) {
               </span>
               <span>Cash Balance</span>
             </div>
-            <div className="stat-value">{fmt(MOCK_CASH)}</div>
+            <div className="stat-value">
+              {dataLoading ? "—" : fmt(cashBalance)}
+            </div>
             <div className="stat-subtitle">Available for new positions</div>
           </div>
 
@@ -245,11 +322,13 @@ function Portfolio({ user }) {
               </span>
               <span>Invested Portfolio Value</span>
             </div>
-            <div className="stat-value">{fmt(MOCK_PORTFOLIO_VALUE)}</div>
+            <div className="stat-value">
+              {dataLoading ? "—" : fmt(portfolioValue)}
+            </div>
             <div className="stat-subtitle">
               Total Account:{" "}
               <span className="green-text invested-text">
-                {fmt(MOCK_CASH + MOCK_PORTFOLIO_VALUE)}
+                {dataLoading ? "—" : fmt(cashBalance + portfolioValue)}
               </span>
             </div>
           </div>
@@ -261,30 +340,32 @@ function Portfolio({ user }) {
             <div>
               <h2>Advanced Chart</h2>
               <p className="chart-subtitle">
-                {selectedHolding.name} &mdash; {selectedHolding.shares} shares held
+                {MARKET_DATA[selectedTicker]?.company_name ?? selectedTicker}
+                {heldTickers.has(selectedTicker) && (
+                  <> &mdash; {holdings.find((h) => h.ticker === selectedTicker)?.shares ?? 0} shares held</>
+                )}
               </p>
             </div>
 
             <div className="chart-selector">
-              {MOCK_HOLDINGS.map((h) => (
+              {allTickers.map((ticker) => (
                 <button
-                  key={h.ticker}
-                  className={`chart-selector-btn ${h.dotClass} ${
-                    selectedTicker === h.ticker ? "chart-selector-btn-active" : ""
+                  key={ticker}
+                  className={`chart-selector-btn ${MARKET_DATA[ticker].dotClass} ${
+                    selectedTicker === ticker ? "chart-selector-btn-active" : ""
                   }`}
-                  onClick={() => setSelectedTicker(h.ticker)}
+                  onClick={() => setSelectedTicker(ticker)}
                 >
-                  {h.ticker}
+                  {ticker}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* key forces a clean remount when ticker changes */}
           <TradingViewChart
             key={selectedTicker}
             symbol={selectedTicker}
-            exchange={selectedHolding.exchange}
+            exchange={selectedMarket.exchange}
           />
         </section>
 
@@ -301,7 +382,7 @@ function Portfolio({ user }) {
             <button
               className="analyze-btn"
               onClick={handleAnalyze}
-              disabled={isAnalyzing}
+              disabled={isAnalyzing || dataLoading || holdings.length === 0}
             >
               {isAnalyzing ? (
                 <>
@@ -310,7 +391,6 @@ function Portfolio({ user }) {
                 </>
               ) : (
                 <>
-                  {/* sparkle icon */}
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" />
                   </svg>
@@ -326,30 +406,43 @@ function Portfolio({ user }) {
 
           <div className="analysis-context">
             <span className="context-chip">
-              <span className="blue-text">Cash available:</span> {fmt(MOCK_CASH)}
+              <span className="blue-text">Cash available:</span>{" "}
+              {dataLoading ? "loading…" : fmt(cashBalance)}
             </span>
             <span className="context-chip">
-              <span className="green-text">Holdings:</span> {MOCK_HOLDINGS.length} positions
+              <span className="green-text">Holdings:</span>{" "}
+              {dataLoading ? "loading…" : `${holdings.length} position${holdings.length !== 1 ? "s" : ""}`}
             </span>
             <span className="context-chip">
-              <span className="orange-text">Model:</span> llama3 (local)
+              <span className="orange-text">Model:</span> llama3.2 (local)
             </span>
           </div>
 
           <div className="portfolio-divider" style={{ marginBottom: 0 }} />
 
           <div className="recommendations-list">
+            {recommendations.length === 0 && (
+              <div className="holding-row" style={{ padding: "28px 32px", color: "#9ca3af" }}>
+                {holdings.length === 0
+                  ? "No holdings found. Make some trades on the Transact page first."
+                  : "Click \"Analyze Portfolio\" to get AI recommendations for your holdings."}
+              </div>
+            )}
             {recommendations.map((rec) => {
-              const holding = MOCK_HOLDINGS.find((h) => h.ticker === rec.ticker);
+              const market = MARKET_DATA[rec.ticker];
+              const holding = holdings.find((h) => h.ticker === rec.ticker);
               return (
                 <div className="recommendation-item" key={rec.ticker}>
                   <div className="rec-top">
                     <div className="rec-identity">
-                      <span className={`holding-dot ${holding?.dotClass ?? ""}`} />
+                      <span className={`holding-dot ${market?.dotClass ?? ""}`} />
                       <div>
                         <span className="holding-ticker">{rec.ticker}</span>
+                        {market && (
+                          <span className="holding-name"> — {market.company_name}</span>
+                        )}
                         {holding && (
-                          <span className="holding-name"> — {holding.name}</span>
+                          <span className="holding-name"> ({holding.shares} shares held)</span>
                         )}
                       </div>
                     </div>

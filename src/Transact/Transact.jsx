@@ -105,11 +105,12 @@ export default function TransactPage() {
     setLoadingFunds(true);
 
     try {
+      // maybeSingle() returns null (not an error) when no profile row exists yet
       const { data: profile, error: profileError } = await supabase
         .from("Profiles")
         .select("starting_funds")
         .eq("id", userId)
-        .single();
+        .maybeSingle();
 
       if (profileError) {
         setFundsMessage(
@@ -128,15 +129,13 @@ export default function TransactPage() {
         return;
       }
 
-      const { error: updateError } = await supabase
+      // upsert creates the profile row if it doesn't exist yet
+      const { error: upsertError } = await supabase
         .from("Profiles")
-        .update({ starting_funds: newStartingFunds })
-        .eq("id", userId);
+        .upsert({ id: userId, starting_funds: newStartingFunds });
 
-      if (updateError) {
-        setFundsMessage(
-          updateError.message || "Failed to update starting funds."
-        );
+      if (upsertError) {
+        setFundsMessage(upsertError.message || "Failed to update starting funds.");
         setLoadingFunds(false);
         return;
       }
