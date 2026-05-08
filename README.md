@@ -1,64 +1,85 @@
-# 💰 CS 451R Team 15 Project – Banking Web App with Crypto
+# CS 451R Team 15 Capstone Project – Brokerage Web App
 
-## ✨ Project Overview
-This project is a **banking web application** featuring **crypto functionality**.  
-Users can log in securely, view balances, and interact with crypto features such as viewing prices and managing virtual wallets.  
-The app also includes a **3D star background** for visual appeal using `react-three-fiber` and `@react-three/drei`.
-
----
-
-## 💻 Tech Stack
-- **Frontend:** React, JavaScript  
-- **3D Graphics:** react-three-fiber, drei, maath  
-- **Styling:** CSS / Inline Styles  
-- **Icons:** react-icons  
-- **Backend / Mock Data:** Mock authentication system, simulated wallet data  
-
----
-
-## 👥 Team Members
-- Ryan Phillips  
-- Nguyen Quy Toan (Tom)  
+## Team Members
 - Ryan Phillips
+- Mike Minor
+- Nguyen Quy Toan (Tom)
 - Dylan Johnson
 ---
 
-## 🚀 Features
-- 🔑 Secure login with **mock authentication**  
-- ✨ Glassmorphism login card with **starfield background**  
-- 🪙 Crypto wallet display (mock data)  
-- 💵 View balances and recent transactions  
-- 📱 Responsive design for desktop and mobile  
-- 🔗 GitHub link included for reference  
+## Project Overview
+This project is a **brokerage web application** featuring **LLM recomendation services**.  
+Users can log in securely, view holdings, deposit and withdrdaw, make transactions, and interact with an llm to get in depth market recommendations and portfolio analysis.  
+---
+
+## Tech Stack
+- **Frontend:** React, ViteJS, JavaScript
+- **Styling:** CSS / Inline Styles  
+- **Backend:** Supbase
+- **LLM:** Ollama
+
+---
+
+## Features
+- Secure registration and login pages with supabase authentication
+- Forgotten/Reset password with one time code pipeline
+- User holdings/porfolio dashboard page
+- Deposit and withdraw to user accounts on transactions page
+- Buy and sell stocks/etfs on the transaction page
+- LLM portfolio recommendations page
+- LLM market analysis and recommendation page
+- Prfile page for viwing all account details and exporting transactions history to csv
+
+
+---
+
+## Stretch Goals
+- Export user transactions history to csv
+- LLM Porfolio Analysis + Recommendations
+- LLM Market Analysis + Recommendations
+
+---
+
+## Databse Schema + Setup (Supabase)
+- The databse schema creation and sql setup scripts are provided in the SchemaAndSetup.sql file
+- Paste this file directly into supabase sql editor and run
+- All code that directly makes calls to supabse is in src/authContext.js
+
 
 ---
 
 ## 🛠 Setup Instructions
 
-### 1️⃣ Clone the repository
+### Clone the repository
 ```bash
 git clone https://github.com/RyanPhillipsUMKC/CS451R-Team15.git 
 ```
 
-### 2️⃣ Navigate into the project folder
+### Navigate into the project folder
 ```bash
 cd CS451R-Team15
 ```
 
-### 3️⃣ Install dependencies  
+### Install dependencies  
 ```bash
 npm install
 ```
 
-### 4️⃣ Run the development server  
+### Run the development server  
 ```bash
 npm run dev
 ```
 
-### 5️⃣ Open the application  
+### Open the application  
 Open your browser and go to:  
 ```bash
 http://localhost:5173
 ```
 
+---
 
+## 🛠 Supabase Setup Instructions
+
+### Setp Supabase Project on Supabase Website
+
+### Paste Schema.sql file into the sql editor and create all tables.
